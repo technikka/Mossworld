@@ -9,16 +9,25 @@ int main()
     int world_height = 6;
     int world_width = 9;
 
-    // Get world size from user
-    std::cout << "Select World Size";
-    std::cout << std::endl;
-    std::cout << "Height: (enter number 4 - 20)";
-    std::cout << std::endl;
-    std::cin >> world_height;
+    int turn_number = 1;
+    int creature_count = 3;
+    int food_count = 2;
 
-    std::cout << "Width: (enter number 4 - 20)";
-    std::cout << std::endl;
-    std::cin >> world_width;
+    // Get world size from user
+    // COMMENTED OUT FOR TESTING
+    // std::cout << "Select World Size\n";
+    // std::cout << "Height: (enter number 4 - 20)\n";
+    // std::cin >> world_height;
+    // std::cout << "Width: (enter number 4 - 20)\n";
+    // std::cin >> world_width;
+
+    // Display world info
+    std::cout
+        << "\nWelcome to Mossworld.\n";
+    std::cout << "Tiny creatures stir beneath the dawn mist.\n\n";
+
+    // Display world status
+    std::cout << "Turn: " << turn_number << "  |  " << "Creatures: " << creature_count << "  |  " << "Food: " << food_count << "\n\n";
 
     for (int row = 0; row < world_height; row++)
     {
@@ -29,6 +38,7 @@ int main()
         }
         std::cout << std::endl;
     }
+    std::cout << "\n\n";
 
     return 0;
 }
