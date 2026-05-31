@@ -1,3 +1,4 @@
+#include <array>
 #include <cstdlib>  // for rand()
 #include <iostream>
 #include <string>
@@ -16,14 +17,26 @@ struct Tile {
   char occupant;
 };
 
-// is also creating creatures for now
-void createTiles(int creature_count, int food_count) {
+using World = array<array<Tile, WORLD_WIDTH>, WORLD_HEIGHT>;
+
+void printWorld(World& world) {
+  for (int row = 0; row < world.size(); row++) {
+    for (int column = 0; column < world[0].size(); column++) {
+      cout << ' ' << world[row][column].occupant << ' ';
+    }
+    cout << endl;
+  }
+  cout << endl;
+}
+
+World createWorld(int creature_count, int food_count) {
   int creatures_placed = 0;
   int food_placed = 0;
+  World world;  // instantiating world array
 
   for (int row = 0; row < WORLD_HEIGHT; row++) {
     for (int column = 0; column < WORLD_WIDTH; column++) {
-      Tile tile;
+      Tile& tile = world[row][column];
       tile.x = column;
       tile.y = row;
 
@@ -41,10 +54,9 @@ void createTiles(int creature_count, int food_count) {
       } else {
         tile.occupant = UNOCCUPIED_SPACE;
       }
-      cout << ' ' << tile.occupant << ' ';
     }
-    cout << endl;
   }
+  return world;
 }
 
 int main() {
@@ -56,7 +68,9 @@ int main() {
   cout << "\nWelcome to Mossworld.\n";
   cout << "Tiny creatures stir beneath the dawn mist.\n\n";
 
-  createTiles(creature_count, food_count);
+  World world = createWorld(creature_count, food_count);
+
+  printWorld(world);
 
   cout << "\n\n";  // space beneath world
 
