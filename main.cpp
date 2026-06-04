@@ -10,7 +10,7 @@ using namespace std;
 const int WORLD_HEIGHT = 6;
 const int WORLD_WIDTH = 9;
 
-enum OccupantType { EMPTY, CREATURE, FOOD };
+enum OccupantType { EMPTY, CREATURE, NUTRIENT };
 
 struct Tile {
   int id;
@@ -27,7 +27,7 @@ char OccupantTypeToChar(OccupantType type) {
     case CREATURE:
       return 'k';
 
-    case FOOD:
+    case NUTRIENT:
       return '~';
   }
   return '?';  // should never be reached
@@ -64,7 +64,7 @@ int coordinatesToId(Position coordinates) {
   return coordinates.y * WORLD_WIDTH + coordinates.x;
 }
 
-World createWorld(int creature_count, int food_count) {
+World createWorld(int creature_count, int nutrient_count) {
   // * world[0] is the first row, world[0][1] is first row, second column.
   World world;  // instantiating world array
 
@@ -116,21 +116,21 @@ World createWorld(int creature_count, int food_count) {
 int main() {
   int turn_number = 1;
   int creature_count = 3;
-  int food_count = 2;
+  int nutrient_count = 2;
   srand(time(0));  // seed rand
 
   cout << "\nWelcome to Mossworld.\n";
   cout << "Tiny creatures stir beneath the dawn mist.\n\n";
 
-  World world = createWorld(creature_count, food_count);
+  World world = createWorld(creature_count, nutrient_count);
 
   printWorld(world);
 
   cout << "\n\n";  // space beneath world
 
   cout << "Turn: " << turn_number << "  |  "
-       << "Creatures: " << creature_count << "  |  "
-       << "Food: " << food_count << "\n\n";
+       << "Mosslings: " << creature_count << "  |  "
+       << "Nutrient Clusters: " << nutrient_count << "\n\n";
 
   return 0;
 }
