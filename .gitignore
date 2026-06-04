@@ -1,3 +1,5 @@
 *.exe
 .clang-format
 experiment.cpp
+.vscode/
+main.dSYM/
