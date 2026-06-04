@@ -5,19 +5,33 @@
 #include <string>
 using namespace std;
 
-const char UNOCCUPIED_SPACE = '.';
-const char CREATURE = 'k';
-const char FOOD = '~';
+#include "creatures.h"
 
 const int WORLD_HEIGHT = 6;
 const int WORLD_WIDTH = 9;
+
+enum OccupantType { EMPTY, CREATURE, FOOD };
 
 struct Tile {
   int id;
   int x;
   int y;
-  char occupant;
+  OccupantType occupant;
 };
+
+char OccupantTypeToChar(OccupantType type) {
+  switch (type) {
+    case EMPTY:
+      return '.';
+
+    case CREATURE:
+      return 'k';
+
+    case FOOD:
+      return '~';
+  }
+  return '?';  // should never be reached
+}
 
 struct Position {
   int x;
@@ -29,7 +43,8 @@ using World = array<array<Tile, WORLD_WIDTH>, WORLD_HEIGHT>;
 void printWorld(World& world) {
   for (int row = 0; row < WORLD_HEIGHT; row++) {
     for (int column = 0; column < WORLD_WIDTH; column++) {
-      cout << ' ' << world[row][column].occupant << ' ';
+      char symbol = OccupantTypeToChar(world[row][column].occupant);
+      cout << ' ' << symbol << ' ';
     }
     cout << endl;
   }
@@ -60,7 +75,7 @@ World createWorld(int creature_count, int food_count) {
       tile.id = row * WORLD_WIDTH + column;
       tile.x = column;
       tile.y = row;
-      tile.occupant = UNOCCUPIED_SPACE;
+      tile.occupant = EMPTY;
     }
   }
 
@@ -86,7 +101,7 @@ World createWorld(int creature_count, int food_count) {
       Tile& tile = world[pos.y][pos.x];
 
       // update tile
-      if (tile.occupant == UNOCCUPIED_SPACE) {
+      if (tile.occupant == EMPTY) {
         tile.occupant = CREATURE;
         creature_placed = true;
       }
