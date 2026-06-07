@@ -5,19 +5,12 @@
 #include <string>
 using namespace std;
 
-#include "creatures.h"
+#include "Creature.h"
 
 const int WORLD_HEIGHT = 6;
 const int WORLD_WIDTH = 9;
 
 enum OccupantType { EMPTY, CREATURE, NUTRIENT };
-
-struct Tile {
-  int id;
-  int x;
-  int y;
-  OccupantType occupant;
-};
 
 char OccupantTypeToChar(OccupantType type) {
   switch (type) {
@@ -36,6 +29,13 @@ char OccupantTypeToChar(OccupantType type) {
 struct Position {
   int x;
   int y;
+};
+
+struct Tile {
+  int id;
+  int x;
+  int y;
+  OccupantType occupant;
 };
 
 using World = array<array<Tile, WORLD_WIDTH>, WORLD_HEIGHT>;
@@ -64,11 +64,7 @@ int coordinatesToId(Position coordinates) {
   return coordinates.y * WORLD_WIDTH + coordinates.x;
 }
 
-World createWorld(int creature_count, int nutrient_count) {
-  // * world[0] is the first row, world[0][1] is first row, second column.
-  World world;  // instantiating world array
-
-  // create tiles
+void createTiles(World& world) {
   for (int row = 0; row < WORLD_HEIGHT; row++) {
     for (int column = 0; column < WORLD_WIDTH; column++) {
       Tile& tile = world[row][column];
@@ -78,6 +74,12 @@ World createWorld(int creature_count, int nutrient_count) {
       tile.occupant = EMPTY;
     }
   }
+}
+
+World createWorld(int creature_count, int nutrient_count) {
+  // * world[0] is the first row, world[0][1] is first row, second column.
+  World world;  // instantiating world array
+  createTiles(world);
 
   // create spawn zones and randomly place a creature within each zone.
   int number_of_tiles = (WORLD_HEIGHT * WORLD_WIDTH);
@@ -102,8 +104,12 @@ World createWorld(int creature_count, int nutrient_count) {
 
       // update tile
       if (tile.occupant == EMPTY) {
+        // create create object
+        Creature mossling(MOSSLING);
         tile.occupant = CREATURE;
         creature_placed = true;
+        cout << mossling.GetTypeString() << endl;
+        cout << mossling.GetTypeSymbol() << endl;
       }
     }
 
@@ -120,7 +126,7 @@ int main() {
   srand(time(0));  // seed rand
 
   cout << "\nWelcome to Mossworld.\n";
-  cout << "Tiny creatures stir beneath the dawn mist.\n\n";
+  cout << "Tiny creatures stir among the morning dew.\n\n";
 
   World world = createWorld(creature_count, nutrient_count);
 
