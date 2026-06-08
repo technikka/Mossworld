@@ -28,7 +28,7 @@ Position Tile::GetPosition() {
 }
 
 Position Tile::IdToCoordinates(int tile_id, int world_width, int world_height) {
-    int x = tile_id % world_height;
+    int x = tile_id % world_width;
     int y = tile_id / world_width;
     Position position;
     position.x = x;
