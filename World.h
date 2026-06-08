@@ -1,38 +1,36 @@
 #include <vector>
+
+#include "Tile.h"
 using namespace std;
 
 #ifndef WORLD_H
 #define WORLD_H
 
-struct Position {
-  int x;
-  int y;
-};
-
-struct Tile {
-  int id;
-  int x;
-  int y;
-  //   OccupantType occupant;
-};
-
 class World {
- public:
-  World(int creature_count, int nutrient_count, int width = 9, int height = 6);
-  int GetWidth();
-  int GetHeight();
-  int GetCreatureCount();
-  int GetNutrientCount();
-  void createTiles();
-  void print();
+   public:
+    World(int creature_count, int nutrient_count, int width = 9,
+          int height = 6);
+    int GetWidth();
+    int GetHeight();
+    int GetCreatureCount();
+    int GetNutrientCount();
+    void print();
+    void printHUD(int turn_number);
 
-  vector<vector<Tile>> tiles;
+    // * Grid indexing:
+    // * tiles[row][column]
+    // * tiles[0] = first row
+    // * tiles[0][1] = first row, second column
+    vector<vector<Tile>> tiles;
 
- private:
-  int height;
-  int width;
-  int creature_count;
-  int nutrient_count;
+   private:
+    int height;
+    int width;
+    int creature_count;
+    int nutrient_count;
+
+    void createTiles();
+    void placeCreatures();
 };
 
 #endif
