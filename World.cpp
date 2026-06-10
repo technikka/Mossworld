@@ -14,6 +14,7 @@ World::World(int creature_count, int nutrient_count, int width, int height) {
     this->placeCreatures();
 }
 
+int next_creature_id = 1;
 int World::GetWidth() { return width; }
 int World::GetHeight() { return height; }
 int World::GetCreatureCount() { return creature_count; }
@@ -26,11 +27,14 @@ void World::createTiles() {
             int id = row * width + column;
             OccupantType occupant = EMPTY;
             tiles[row][column] = Tile(id, column, row, occupant);
-            // todo: don't delete this, understand what its doing first:
-            // Position position = tiles[row][column].GetPosition();
-            // cout << position.x << ", " << position.y << endl;
         }
     }
+}
+
+void World::createCreature(Position position) {
+    Creature mossling(MOSSLING, next_creature_id, position);
+    creatures.push_back(mossling);
+    next_creature_id++;
 }
 
 void World::placeCreatures() {
@@ -55,14 +59,59 @@ void World::placeCreatures() {
 
             // update tile
             if (tile.occupant == EMPTY) {
-                // create create object
-                Creature mossling(MOSSLING);
-                tile.occupant = CREATURE;
+                createCreature(position);
+                tile.occupant = CREATURE;  // setting enum
                 creature_placed = true;
             }
         }
-
         counter = end_id;
+    }
+}
+
+vector<Position> World::getAdjacentOpenPositions(Position position) {
+    vector<Position> possible_positions;
+    int x = position.x;
+    int y = position.y;
+
+    possible_positions.push_back({x - 1, y});  // left
+    possible_positions.push_back({x + 1, y});  // right
+    possible_positions.push_back({x, y - 1});  // up
+    possible_positions.push_back({x, y + 1});  // down
+
+    vector<Position> valid_positions;
+    for (const Position& position : possible_positions) {
+        if (position.x < 0 || position.x >= width) continue;
+        if (position.y < 0 || position.y >= height) continue;
+
+        Tile& tile = tiles[position.y][position.x];
+
+        if (tile.occupant != CREATURE) {
+            valid_positions.push_back(position);
+        }
+    }
+    return valid_positions;
+}
+
+Position World::selectRandomPosition(Position current_position) {
+    vector<Position> valid_positions =
+        getAdjacentOpenPositions(current_position);
+    int rand_index = rand() % (valid_positions.size());
+
+    return valid_positions.at(rand_index);
+}
+
+void World::advanceDay() {
+    // move creatures to a random adjacent tile
+    for (Creature& creature : creatures) {
+        Position current_position = creature.position;
+        Position new_position = selectRandomPosition(current_position);
+        creature.position = new_position;
+
+        // update tiles
+        Tile& current_tile = tiles[current_position.y][current_position.x];
+        Tile& new_tile = tiles[new_position.y][new_position.x];
+        current_tile.occupant = EMPTY;
+        new_tile.occupant = CREATURE;
     }
 }
 
@@ -77,10 +126,10 @@ void World::print() {
     cout << endl;
 }
 
-void World::printHUD(int turn_number) {
+void World::printHUD(int day) {
     cout << "\n\n";  // space beneath world
 
-    cout << "Turn: " << turn_number << "  |  "
+    cout << "Day: " << day << "  |  "
          << "Mosslings: " << creature_count << "  |  "
          << "Nutrient Clusters: " << nutrient_count << "\n\n";
 }

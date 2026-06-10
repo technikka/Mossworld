@@ -15,13 +15,16 @@ class World {
     int GetCreatureCount();
     int GetNutrientCount();
     void print();
-    void printHUD(int turn_number);
+    void printHUD(int day);
+    void advanceDay();
 
     // * Grid indexing:
     // * tiles[row][column]
     // * tiles[0] = first row
     // * tiles[0][1] = first row, second column
     vector<vector<Tile>> tiles;
+
+    vector<Creature> creatures;
 
    private:
     int height;
@@ -31,6 +34,9 @@ class World {
 
     void createTiles();
     void placeCreatures();
+    void createCreature(Position position);
+    vector<Position> getAdjacentOpenPositions(Position position);
+    Position selectRandomPosition(Position current_position);
 };
 
 #endif
