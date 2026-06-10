@@ -1,5 +1,6 @@
 #include <vector>
 
+#include "Creature.h"
 #include "Tile.h"
 using namespace std;
 
@@ -31,6 +32,7 @@ class World {
     int width;
     int creature_count;
     int nutrient_count;
+    int next_creature_id = 1;
 
     void createTiles();
     void placeCreatures();
