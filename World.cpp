@@ -14,7 +14,6 @@ World::World(int creature_count, int nutrient_count, int width, int height) {
     this->placeCreatures();
 }
 
-int next_creature_id = 1;
 int World::GetWidth() { return width; }
 int World::GetHeight() { return height; }
 int World::GetCreatureCount() { return creature_count; }
@@ -95,6 +94,10 @@ vector<Position> World::getAdjacentOpenPositions(Position position) {
 Position World::selectRandomPosition(Position current_position) {
     vector<Position> valid_positions =
         getAdjacentOpenPositions(current_position);
+
+    if (valid_positions.empty()) {
+        return current_position;
+    }
     int rand_index = rand() % (valid_positions.size());
 
     return valid_positions.at(rand_index);
