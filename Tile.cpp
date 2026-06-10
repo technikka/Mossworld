@@ -18,8 +18,6 @@ Tile::Tile() {
 
 int Tile::GetId() { return id; }
 
-OccupantType Tile::GetOccupant() { return occupant; }
-
 Position Tile::GetPosition() {
     Position position;
     position.x = x;
