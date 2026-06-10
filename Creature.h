@@ -1,4 +1,6 @@
 #include <string>
+
+#include "Position.h"
 using namespace std;
 #ifndef CREATURE_H
 #define CREATURE_H
@@ -7,13 +9,16 @@ using namespace std;
 enum CreatureType { MOSSLING };
 
 class Creature {
- public:
-  Creature(CreatureType type);
-  string GetTypeString();
-  char GetTypeSymbol();
+   public:
+    Creature(CreatureType type, int id, Position position);
+    string GetTypeString();
+    char GetTypeSymbol();
+    int GetId();
+    int id;
+    Position position;
 
- private:
-  CreatureType type;
+   private:
+    CreatureType type;
 };
 
 #endif
