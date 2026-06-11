@@ -8,6 +8,7 @@ Creature::Creature(CreatureType type, int id, Position position) {
     this->type = type;
     this->id = id;
     this->position = position;
+    position_history.push_back(position);
 }
 
 char CreatureTypeToSymbol(CreatureType type) {

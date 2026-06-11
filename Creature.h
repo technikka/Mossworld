@@ -14,10 +14,11 @@ class Creature {
     string GetTypeString();
     char GetTypeSymbol();
     int GetId();
-    int id;
     Position position;
+    vector<Position> position_history;
 
    private:
+    int id;
     CreatureType type;
 };
 
