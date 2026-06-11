@@ -6,50 +6,77 @@ using namespace std;
 #include "Tile.h"
 #include "World.h"
 
-World::World(int creature_count, int nutrient_count, int width, int height) {
+World::World(int creature_count, int nutrient_cluster_count, int width,
+             int height) {
     this->width = width;
     this->height = height;
     this->creature_count = creature_count;
-    this->nutrient_count = nutrient_count;
+    this->nutrient_cluster_count = nutrient_cluster_count;
     this->createTiles();
-    this->placeCreatures();
+    this->PlaceEntities(CREATURE);
+    this->PlaceEntities(NUTRIENT_CLUSTER);
 }
 
 int World::GetWidth() { return width; }
 int World::GetHeight() { return height; }
-int World::GetCreatureCount() { return creature_count; }
-int World::GetNutrientCount() { return nutrient_count; }
+
+int World::GetEntityCount(EntityType type) {
+    switch (type) {
+        case CREATURE:
+            return creature_count;
+
+        case NUTRIENT_CLUSTER:
+            return nutrient_cluster_count;
+        case EMPTY:
+            return 0;
+    }
+}
 
 void World::createTiles() {
     tiles.resize(height, vector<Tile>(width));
     for (int row = 0; row < height; row++) {
         for (int column = 0; column < width; column++) {
             int id = row * width + column;
-            OccupantType occupant = EMPTY;
+            EntityType occupant = EMPTY;
             tiles[row][column] = Tile(id, column, row, occupant);
         }
     }
 }
 
-void World::createCreature(Position position) {
-    Creature mossling(MOSSLING, next_creature_id, position);
-    creatures.push_back(mossling);
-    next_creature_id++;
+void World::CreateEntity(EntityType type, Position position) {
+    switch (type) {
+        case CREATURE: {
+            Creature mossling(MOSSLING, next_creature_id, position);
+            creatures.push_back(mossling);
+            next_creature_id++;
+            break;
+        }
+        case NUTRIENT_CLUSTER: {
+            // todo create nutrient cluster
+            NutrientCluster nutrients(NUTRIENT_CLUSTER, position);
+            nutrient_clusters.push_back(nutrients);
+            break;
+        }
+        case EMPTY: {
+            break;
+        }
+    }
 }
 
-void World::placeCreatures() {
+void World::PlaceEntities(EntityType entity) {
     int number_of_tiles = (height * width);
+    int entity_count = GetEntityCount(entity);
     unsigned int counter = 0;
-    for (int i = 0; i < creature_count; i++) {
+    for (int i = 0; i < entity_count; i++) {
         int start_id = counter;
         // divide the tile space proportionally:
-        int end_id = ((i + 1.0) / creature_count) * number_of_tiles;
+        int end_id = ((i + 1.0) / entity_count) * number_of_tiles;
 
-        bool creature_placed = false;
+        bool entity_placed = false;
 
         // * WARNING: this loop assumes at least one empty tile exists.
         // * Infinite-loop potential.
-        while (!creature_placed) {
+        while (!entity_placed) {
             int rand_pos = rand() % (end_id - start_id);
 
             // find the tile to update
@@ -59,14 +86,16 @@ void World::placeCreatures() {
 
             // update tile
             if (tile.occupant == EMPTY) {
-                createCreature(position);
-                tile.occupant = CREATURE;  // setting enum
-                creature_placed = true;
+                CreateEntity(entity, position);
+                tile.occupant = entity;  // setting enum
+                entity_placed = true;
             }
         }
         counter = end_id;
     }
 }
+
+void World::PlaceNutrientClusters() {}
 
 vector<Position> World::getAdjacentOpenPositions(Position position) {
     vector<Position> possible_positions;
@@ -143,7 +172,7 @@ void World::print() {
     cout << "\n\n";  // space above world
     for (int row = 0; row < height; row++) {
         for (int column = 0; column < width; column++) {
-            char symbol = OccupantTypeToChar(tiles[row][column].occupant);
+            char symbol = EntityTypeToChar(tiles[row][column].occupant);
             cout << ' ' << symbol << ' ';
         }
         cout << endl;
@@ -156,5 +185,5 @@ void World::printHUD(int day) {
 
     cout << "Day: " << day << "  |  "
          << "Mosslings: " << creature_count << "  |  "
-         << "Nutrient Clusters: " << nutrient_count << "\n\n";
+         << "Nutrient Clusters: " << nutrient_cluster_count << "\n\n";
 }

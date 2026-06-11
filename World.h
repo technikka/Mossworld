@@ -1,6 +1,7 @@
 #include <vector>
 
 #include "Creature.h"
+#include "NutrientCluster.h"
 #include "Tile.h"
 using namespace std;
 
@@ -13,11 +14,10 @@ class World {
           int height = 6);
     int GetWidth();
     int GetHeight();
-    int GetCreatureCount();
-    int GetNutrientCount();
     void print();
     void printHUD(int day);
     void advanceDay();
+    int GetEntityCount(EntityType type);
 
     // * Grid indexing:
     // * tiles[row][column]
@@ -26,17 +26,19 @@ class World {
     vector<vector<Tile>> tiles;
 
     vector<Creature> creatures;
+    vector<NutrientCluster> nutrient_clusters;
 
    private:
     int height;
     int width;
     int creature_count;
-    int nutrient_count;
+    int nutrient_cluster_count;
     int next_creature_id = 1;
 
     void createTiles();
-    void placeCreatures();
-    void createCreature(Position position);
+    void PlaceEntities(EntityType entity);
+    void PlaceNutrientClusters();
+    void CreateEntity(EntityType entity, Position position);
     vector<Position> getAdjacentOpenPositions(Position position);
     Position selectPosition(Creature& creature);
     void MoveCreature(Creature& creature);
