@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 
 #include "Position.h"
 using namespace std;
