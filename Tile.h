@@ -1,17 +1,15 @@
 using namespace std;
+#include "EntityType.h"
 #include "Position.h"
 #ifndef TILE_H
 #define TILE_H
 
-enum OccupantType { EMPTY, CREATURE, NUTRIENT };
-char OccupantTypeToChar(OccupantType type);
-
 class Tile {
    public:
     Tile();
-    Tile(int id, int x, int y, OccupantType occupant);
+    Tile(int id, int x, int y, EntityType occupant);
     int GetId();
-    OccupantType occupant;
+    EntityType occupant;
     Position GetPosition();
     static Position IdToCoordinates(int tile_id, int world_width,
                                     int world_height);

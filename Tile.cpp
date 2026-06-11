@@ -3,7 +3,7 @@ using namespace std;
 
 #include "Tile.h"
 
-Tile::Tile(int id, int x, int y, OccupantType occupant) {
+Tile::Tile(int id, int x, int y, EntityType occupant) {
     this->id = id;
     this->x = x;
     this->y = y;
@@ -36,18 +36,4 @@ Position Tile::IdToCoordinates(int tile_id, int world_width, int world_height) {
 
 int Tile::CoordinatesToId(Position coordinates, int world_width) {
     return coordinates.y * world_width + coordinates.x;
-}
-
-char OccupantTypeToChar(OccupantType type) {
-    switch (type) {
-        case EMPTY:
-            return '.';
-
-        case CREATURE:
-            return 'k';
-
-        case NUTRIENT:
-            return '~';
-    }
-    return '?';  // should never be reached
 }
