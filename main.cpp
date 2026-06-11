@@ -22,7 +22,7 @@ int main() {
         world.print();
         world.printHUD(day);
 
-        cout << "\nA new day is unfolding. Observe? (y/n)\n" << endl;
+        cout << "\nA new day is unfolding. Observe? (y/n)" << endl;
 
         char input;
         cin >> input;
