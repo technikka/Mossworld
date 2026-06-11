@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 using namespace std;
 
@@ -91,34 +92,55 @@ vector<Position> World::getAdjacentOpenPositions(Position position) {
     return valid_positions;
 }
 
-Position World::selectRandomPosition(Position current_position) {
+Position World::selectPosition(Creature& creature) {
     vector<Position> valid_positions =
-        getAdjacentOpenPositions(current_position);
+        getAdjacentOpenPositions(creature.position);
 
     if (valid_positions.empty()) {
-        return current_position;
+        return creature.position;
     }
+
+    // try to avoid back-tracking to previous position
+    if (creature.position_history.size() > 1 && valid_positions.size() > 1) {
+        Position previous_position =
+            creature.position_history.at(creature.position_history.size() - 2);
+        auto it = find(valid_positions.begin(), valid_positions.end(),
+                       previous_position);
+        if (it != valid_positions.end()) {
+            valid_positions.erase(it);
+        }
+    }
+
     int rand_index = rand() % (valid_positions.size());
 
     return valid_positions.at(rand_index);
 }
 
-void World::advanceDay() {
-    // move creatures to a random adjacent tile
-    for (Creature& creature : creatures) {
-        Position current_position = creature.position;
-        Position new_position = selectRandomPosition(current_position);
-        creature.position = new_position;
+void World::MoveCreature(Creature& creature) {
+    Position current_position = creature.position;
+    Position new_position = selectPosition(creature);
+    creature.position = new_position;
+    creature.position_history.push_back(new_position);
 
-        // update tiles
-        Tile& current_tile = tiles[current_position.y][current_position.x];
-        Tile& new_tile = tiles[new_position.y][new_position.x];
-        current_tile.occupant = EMPTY;
-        new_tile.occupant = CREATURE;
+    // update tiles
+    Tile& current_tile = tiles[current_position.y][current_position.x];
+    Tile& new_tile = tiles[new_position.y][new_position.x];
+    current_tile.occupant = EMPTY;
+    new_tile.occupant = CREATURE;
+
+    // cout << "Creature " << creature.GetId() << " moved from ("
+    //      << current_position.x << ", " << current_position.y << ") to ("
+    //      << new_position.x << ", " << new_position.y << ")\n";
+}
+
+void World::advanceDay() {
+    for (Creature& creature : creatures) {
+        MoveCreature(creature);
     }
 }
 
 void World::print() {
+    cout << "\n\n";  // space above world
     for (int row = 0; row < height; row++) {
         for (int column = 0; column < width; column++) {
             char symbol = OccupantTypeToChar(tiles[row][column].occupant);

@@ -38,7 +38,8 @@ class World {
     void placeCreatures();
     void createCreature(Position position);
     vector<Position> getAdjacentOpenPositions(Position position);
-    Position selectRandomPosition(Position current_position);
+    Position selectPosition(Creature& creature);
+    void MoveCreature(Creature& creature);
 };
 
 #endif
