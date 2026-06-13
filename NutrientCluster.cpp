@@ -8,3 +8,5 @@ NutrientCluster::NutrientCluster(EntityType type, Position position) {
     this->type = type;
     this->position = position;
 }
+
+Position NutrientCluster::GetPosition() const { return position; }

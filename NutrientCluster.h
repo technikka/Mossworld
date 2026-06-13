@@ -10,6 +10,7 @@ using namespace std;
 class NutrientCluster {
    public:
     NutrientCluster(EntityType type, Position position);
+    Position GetPosition() const;
 
    private:
     EntityType type;
