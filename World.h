@@ -10,12 +10,11 @@ using namespace std;
 
 class World {
    public:
-    World(int creature_count, int nutrient_count, int width = 9,
-          int height = 6);
+    World(int width = 9, int height = 6);
     int GetWidth();
     int GetHeight();
-    void print();
-    void printHUD(int day);
+    void Print();
+    void PrintHUD();
     void advanceDay();
     int GetEntityCount(EntityType type);
 
@@ -27,21 +26,29 @@ class World {
 
     vector<Creature> creatures;
     vector<NutrientCluster> nutrient_clusters;
+    vector<string> available_traits;
 
    private:
     int height;
     int width;
     int creature_count;
+    int nutrient_cluster_start_count = 2;
+    int creature_start_count = 3;
     int nutrient_cluster_count;
     int next_creature_id = 1;
+    int day = 1;
 
     void createTiles();
+    void PlaceEntity(EntityType entity, int start_id, int end_id);
     void PlaceEntities(EntityType entity);
-    void PlaceNutrientClusters();
     void CreateEntity(EntityType entity, Position position);
+    void RemoveEntity(EntityType type, Position position);
     vector<Position> getAdjacentOpenPositions(Position position);
     Position selectPosition(Creature& creature);
     void MoveCreature(Creature& creature);
+    string GetTrait();
+    void ManageNutrientClusters();
+    void HandleNutrientConsumption(Creature& creature, Position position);
 };
 
 #endif

@@ -6,12 +6,18 @@ using namespace std;
 #include "Tile.h"
 #include "World.h"
 
-World::World(int creature_count, int nutrient_cluster_count, int width,
-             int height) {
+vector<string> mossling_traits = {
+    "Curious",  "Cautious",   "Restless", "Patient", "Timid",
+    "Bold",     "Gentle",     "Wary",     "Dreamy",  "Cheerful",
+    "Quiet",    "Thoughtful", "Steady",   "Nimble",  "Wandering",
+    "Diligent", "Observant",  "Playful",  "Calm",    "Hopeful"};
+
+World::World(int width, int height) {
     this->width = width;
     this->height = height;
-    this->creature_count = creature_count;
-    this->nutrient_cluster_count = nutrient_cluster_count;
+    this->creature_count = creature_start_count;
+    this->nutrient_cluster_count = nutrient_cluster_start_count;
+    available_traits = mossling_traits;
     this->createTiles();
     this->PlaceEntities(CREATURE);
     this->PlaceEntities(NUTRIENT_CLUSTER);
@@ -46,13 +52,13 @@ void World::createTiles() {
 void World::CreateEntity(EntityType type, Position position) {
     switch (type) {
         case CREATURE: {
-            Creature mossling(MOSSLING, next_creature_id, position);
+            string trait = GetTrait();
+            Creature mossling(MOSSLING, next_creature_id, position, trait);
             creatures.push_back(mossling);
             next_creature_id++;
             break;
         }
         case NUTRIENT_CLUSTER: {
-            // todo create nutrient cluster
             NutrientCluster nutrients(NUTRIENT_CLUSTER, position);
             nutrient_clusters.push_back(nutrients);
             break;
@@ -61,6 +67,47 @@ void World::CreateEntity(EntityType type, Position position) {
             break;
         }
     }
+}
+
+void World::RemoveEntity(EntityType type, Position position) {
+    switch (type) {
+        case CREATURE: {
+            // place holder
+            break;
+        }
+        case NUTRIENT_CLUSTER: {
+            // find the nutrient cluster by position
+            // remove it from the nutrient cluster vector
+            break;
+        }
+        case EMPTY: {
+            break;
+        }
+    }
+};
+
+// Currently handles creating entity, and places randomly.
+// Places entity on random tile between start_id and end_id of Tile ID.
+void World::PlaceEntity(EntityType entity, int start_id, int end_id) {
+    Position position;
+    bool tile_is_empty;
+
+    // * WARNING: infiniate loops potential if no empty tiles
+    do {
+        int rand_pos = rand() % (end_id - start_id);
+        int tile_id = rand_pos + start_id;
+
+        position = Tile::IdToCoordinates(tile_id, width, height);
+
+        Tile& tile = tiles[position.y][position.x];
+        tile_is_empty = tile.occupant == EMPTY;
+
+    } while (!tile_is_empty);
+
+    CreateEntity(entity, position);
+
+    Tile& tile = tiles[position.y][position.x];
+    tile.occupant = entity;
 }
 
 void World::PlaceEntities(EntityType entity) {
@@ -72,30 +119,10 @@ void World::PlaceEntities(EntityType entity) {
         // divide the tile space proportionally:
         int end_id = ((i + 1.0) / entity_count) * number_of_tiles;
 
-        bool entity_placed = false;
-
-        // * WARNING: this loop assumes at least one empty tile exists.
-        // * Infinite-loop potential.
-        while (!entity_placed) {
-            int rand_pos = rand() % (end_id - start_id);
-
-            // find the tile to update
-            int tile_id = rand_pos + start_id;
-            Position position = Tile::IdToCoordinates(tile_id, width, height);
-            Tile& tile = tiles[position.y][position.x];
-
-            // update tile
-            if (tile.occupant == EMPTY) {
-                CreateEntity(entity, position);
-                tile.occupant = entity;  // setting enum
-                entity_placed = true;
-            }
-        }
+        PlaceEntity(entity, start_id, end_id);
         counter = end_id;
     }
 }
-
-void World::PlaceNutrientClusters() {}
 
 vector<Position> World::getAdjacentOpenPositions(Position position) {
     vector<Position> possible_positions;
@@ -114,6 +141,7 @@ vector<Position> World::getAdjacentOpenPositions(Position position) {
 
         Tile& tile = tiles[position.y][position.x];
 
+        // EntityType CREATURE is the only obstacle to occupying a new tile.
         if (tile.occupant != CREATURE) {
             valid_positions.push_back(position);
         }
@@ -145,30 +173,62 @@ Position World::selectPosition(Creature& creature) {
     return valid_positions.at(rand_index);
 }
 
+void World::HandleNutrientConsumption(Creature& creature, Position position) {
+    creature.RestoreEnergy();
+    nutrient_cluster_count -= 1;
+
+    // remove nutrient cluster for its container
+    auto it = find_if(nutrient_clusters.begin(), nutrient_clusters.end(),
+                      [position](const NutrientCluster& cluster) {
+                          return cluster.GetPosition() == position;
+                      });
+
+    if (it != nutrient_clusters.end()) {
+        nutrient_clusters.erase(it);
+    }
+}
+
 void World::MoveCreature(Creature& creature) {
+    // update creature position
     Position current_position = creature.position;
     Position new_position = selectPosition(creature);
     creature.position = new_position;
     creature.position_history.push_back(new_position);
 
-    // update tiles
+    // find tiles
     Tile& current_tile = tiles[current_position.y][current_position.x];
     Tile& new_tile = tiles[new_position.y][new_position.x];
+
+    if (new_tile.occupant == NUTRIENT_CLUSTER) {
+        HandleNutrientConsumption(creature, new_position);
+    }
+
+    // update tiles
     current_tile.occupant = EMPTY;
     new_tile.occupant = CREATURE;
-
-    // cout << "Creature " << creature.GetId() << " moved from ("
-    //      << current_position.x << ", " << current_position.y << ") to ("
-    //      << new_position.x << ", " << new_position.y << ")\n";
 }
 
-void World::advanceDay() {
-    for (Creature& creature : creatures) {
-        MoveCreature(creature);
+void World::ManageNutrientClusters() {
+    // spawn a new cluster every fifth day
+    bool multiple_of_five = (day % 5 == 0);
+    if (multiple_of_five &&
+        nutrient_cluster_count < nutrient_cluster_start_count) {
+        // place on any random tile index
+        PlaceEntity(NUTRIENT_CLUSTER, 0, ((height * width)));
+        nutrient_cluster_count++;
     }
 }
 
-void World::print() {
+void World::advanceDay() {
+    day++;
+    ManageNutrientClusters();
+    for (Creature& creature : creatures) {
+        MoveCreature(creature);
+        creature.LoseDailyEnergy();
+    }
+}
+
+void World::Print() {
     cout << "\n\n";  // space above world
     for (int row = 0; row < height; row++) {
         for (int column = 0; column < width; column++) {
@@ -180,10 +240,27 @@ void World::print() {
     cout << endl;
 }
 
-void World::printHUD(int day) {
+void World::PrintHUD() {
     cout << "\n\n";  // space beneath world
 
-    cout << "Day: " << day << "  |  "
-         << "Mosslings: " << creature_count << "  |  "
-         << "Nutrient Clusters: " << nutrient_cluster_count << "\n\n";
+    cout << "Day: " << day << "\n\n";
+    cout << "------Energy------ \n";
+    for (Creature& creature : creatures) {
+        cout << creature.GetTrait() << " Mossling: " << creature.energy << '/'
+             << creature.GetMaxEnergy() << endl;
+    }
+    cout << "\nNutrient Clusters: " << nutrient_cluster_count << "\n\n";
+}
+
+// selects random trait from available then updates available_traits
+string World::GetTrait() {
+    // refresh available_traits when used up
+    string trait;
+    if (available_traits.size() < 1) {
+        available_traits = mossling_traits;
+    }
+    int rand_index = rand() % available_traits.size();
+    trait = available_traits[rand_index];
+    available_traits.erase(available_traits.begin() + rand_index);
+    return trait;
 }
