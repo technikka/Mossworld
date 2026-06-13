@@ -9,18 +9,17 @@ using namespace std;
 #include "World.h"
 
 int main() {
-    int day = 1;
     srand(time(0));  // seed rand
 
     cout << "\nWelcome to Mossworld.\n";
     cout << "Tiny creatures stir among the morning dew.\n\n";
 
-    World world(3, 2);  // instantiate world
+    World world;  // instantiate world
 
     bool sim_continue = false;
     do {
-        world.print();
-        world.printHUD(day);
+        world.Print();
+        world.PrintHUD();
 
         cout << "\nA new day is unfolding. Observe? (y/n)" << endl;
 
@@ -29,7 +28,6 @@ int main() {
 
         if (input == 'y') {
             sim_continue = true;
-            day += 1;
             world.advanceDay();
         } else {
             sim_continue = false;
