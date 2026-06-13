@@ -19,4 +19,18 @@ inline char EntityTypeToChar(EntityType type) {
     return '?';  // should never be reached
 }
 
+inline string EntityTypeToString(EntityType type) {
+    switch (type) {
+        case EMPTY:
+            return "Empty";
+
+        case CREATURE:
+            return "Creature";
+
+        case NUTRIENT_CLUSTER:
+            return "Nutrient Cluster";
+    }
+    return "?";  // should never be reached
+}
+
 #endif
