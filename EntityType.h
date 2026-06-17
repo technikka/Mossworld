@@ -1,15 +1,13 @@
-using namespace std;
 #ifndef ENTITY_TYPE_H
 #define ENTITY_TYPE_H
 
-enum EntityType { EMPTY, CREATURE, NUTRIENT_CLUSTER };
+#include <string>
+
+enum EntityType { CREATURE, NUTRIENT_CLUSTER };
 
 // 'inline' fixes compiler error when multiple files recieve this definition
 inline char EntityTypeToChar(EntityType type) {
     switch (type) {
-        case EMPTY:
-            return '.';
-
         case CREATURE:
             return 'k';
 
@@ -19,11 +17,8 @@ inline char EntityTypeToChar(EntityType type) {
     return '?';  // should never be reached
 }
 
-inline string EntityTypeToString(EntityType type) {
+inline std::string EntityTypeToString(EntityType type) {
     switch (type) {
-        case EMPTY:
-            return "Empty";
-
         case CREATURE:
             return "Creature";
 

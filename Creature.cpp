@@ -8,7 +8,6 @@ Creature::Creature(CreatureType type, int id, Tile* current_tile, string trait)
     : Entity(CREATURE, current_tile) {
     this->type = type;
     this->id = id;
-    this->current_tile = current_tile;
     this->trait = trait;
     tile_history.push_back(current_tile);
     energy = 10;

@@ -1,12 +1,11 @@
+#ifndef WORLD_H
+#define WORLD_H
+
 #include <vector>
 
 #include "Creature.h"
 #include "NutrientCluster.h"
 #include "Tile.h"
-using namespace std;
-
-#ifndef WORLD_H
-#define WORLD_H
 
 class World {
    public:
@@ -41,7 +40,7 @@ class World {
     void createTiles();
     void PlaceEntity(EntityType entity, int start_id, int end_id);
     void PlaceEntities(EntityType entity);
-    void CreateEntity(EntityType entity, Tile* tile);
+    Entity* CreateEntity(EntityType type, Tile* tile);
     void RemoveEntity(EntityType type, Tile* tile);
     vector<Tile*> GetAdjacentOpenTiles(Tile* tile);
     Tile* SelectCreatureTile(Creature& creature);

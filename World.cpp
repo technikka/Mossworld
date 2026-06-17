@@ -18,6 +18,11 @@ World::World(int width, int height) {
     this->creature_count = creature_start_count;
     this->nutrient_cluster_count = nutrient_cluster_start_count;
     available_traits = mossling_traits;
+
+    // prevent vector reallocation from invalidating tile occupant pointers
+    creatures.reserve(creature_start_count);
+    nutrient_clusters.reserve(nutrient_cluster_start_count);
+
     this->createTiles();
     this->PlaceEntities(CREATURE);
     this->PlaceEntities(NUTRIENT_CLUSTER);
@@ -33,8 +38,6 @@ int World::GetEntityCount(EntityType type) {
 
         case NUTRIENT_CLUSTER:
             return nutrient_cluster_count;
-        case EMPTY:
-            return 0;
     }
 }
 
@@ -43,28 +46,24 @@ void World::createTiles() {
     for (int row = 0; row < height; row++) {
         for (int column = 0; column < width; column++) {
             int id = row * width + column;
-            EntityType occupant = EMPTY;
-            tiles[row][column] = Tile(id, column, row, occupant);
+            tiles[row][column] = Tile(id, column, row);
         }
     }
 }
 
-void World::CreateEntity(EntityType type, Tile* tile) {
+Entity* World::CreateEntity(EntityType type, Tile* tile) {
     switch (type) {
         case CREATURE: {
             string trait = GetTrait();
             Creature mossling(MOSSLING, next_creature_id, tile, trait);
             creatures.push_back(mossling);
             next_creature_id++;
-            break;
+            return &creatures.back();
         }
         case NUTRIENT_CLUSTER: {
-            NutrientCluster nutrients(NUTRIENT_CLUSTER, tile);
+            NutrientCluster nutrients(tile);
             nutrient_clusters.push_back(nutrients);
-            break;
-        }
-        case EMPTY: {
-            break;
+            return &nutrient_clusters.back();
         }
     }
 }
@@ -80,14 +79,11 @@ void World::RemoveEntity(EntityType type, Tile* tile) {
             // remove it from the nutrient cluster vector
             break;
         }
-        case EMPTY: {
-            break;
-        }
     }
 };
 
 // Places entity on random tile between start_id and end_id of Tile ID.
-void World::PlaceEntity(EntityType entity, int start_id, int end_id) {
+void World::PlaceEntity(EntityType type, int start_id, int end_id) {
     Tile* tile = nullptr;
 
     do {
@@ -97,10 +93,10 @@ void World::PlaceEntity(EntityType entity, int start_id, int end_id) {
         Position position = Tile::IdToCoordinates(tile_id, width, height);
         tile = &tiles[position.y][position.x];
 
-    } while (tile->occupant != EMPTY);
+    } while (!tile->IsEmpty());
 
-    CreateEntity(entity, tile);
-    tile->occupant = entity;
+    Entity* entity = CreateEntity(type, tile);
+    tile->SetOccupant(entity);
 }
 
 void World::PlaceEntities(EntityType entity) {
@@ -137,7 +133,7 @@ vector<Tile*> World::GetAdjacentOpenTiles(Tile* current_tile) {
         Tile* tile = &tiles[position.y][position.x];
 
         // EntityType CREATURE is the only obstacle to occupying a new tile.
-        if (tile->occupant != CREATURE) {
+        if (!tile->HasCreature()) {
             valid_tiles.push_back(tile);
         }
     }
@@ -183,11 +179,11 @@ void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
 }
 
 void World::MoveCreature(Creature& creature) {
-    // update creature position
+    // move creature to selected tile
     Tile* current_tile = creature.GetCurrentTile();
     Tile* new_tile = SelectCreatureTile(creature);
 
-    if (new_tile->occupant == NUTRIENT_CLUSTER) {
+    if (new_tile->HasNutrientCluster()) {
         HandleNutrientConsumption(creature, new_tile);
     }
 
@@ -195,8 +191,8 @@ void World::MoveCreature(Creature& creature) {
     creature.tile_history.push_back(new_tile);
 
     // update tiles
-    current_tile->occupant = EMPTY;
-    new_tile->occupant = CREATURE;
+    current_tile->SetOccupant(nullptr);
+    new_tile->SetOccupant(&creature);
 }
 
 void World::ManageNutrientClusters() {
@@ -223,8 +219,7 @@ void World::Print() {
     cout << "\n\n";  // space above world
     for (int row = 0; row < height; row++) {
         for (int column = 0; column < width; column++) {
-            char symbol = EntityTypeToChar(tiles[row][column].occupant);
-            cout << ' ' << symbol << ' ';
+            cout << ' ' << tiles[row][column].GetSymbol() << ' ';
         }
         cout << endl;
     }
