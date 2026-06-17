@@ -16,23 +16,23 @@ int main() {
 
     World world;  // instantiate world
 
-    bool sim_continue = false;
-    do {
+    string input;
+
+    while (true) {
         world.Print();
         world.PrintHUD();
 
-        cout << "\nA new day is unfolding. Observe? (y/n)" << endl;
+        cout << "\nA new day is unfolding. Observe? (Press Enter or 'exit' to "
+                "quit)";
 
-        char input;
-        cin >> input;
+        getline(std::cin, input);
 
-        if (input == 'y') {
-            sim_continue = true;
-            world.advanceDay();
-        } else {
-            sim_continue = false;
+        if (input == "exit") {
+            break;
         }
-    } while (sim_continue == true);
+
+        world.advanceDay();
+    }
 
     return 0;
 }
