@@ -32,7 +32,7 @@ class World {
     int height;
     int width;
     int creature_count;
-    int nutrient_cluster_start_count = 2;
+    int nutrient_cluster_start_count = 4;
     int creature_start_count = 3;
     int nutrient_cluster_count;
     int next_creature_id = 1;
@@ -41,14 +41,14 @@ class World {
     void createTiles();
     void PlaceEntity(EntityType entity, int start_id, int end_id);
     void PlaceEntities(EntityType entity);
-    void CreateEntity(EntityType entity, Position position);
-    void RemoveEntity(EntityType type, Position position);
-    vector<Position> getAdjacentOpenPositions(Position position);
-    Position selectPosition(Creature& creature);
+    void CreateEntity(EntityType entity, Tile* tile);
+    void RemoveEntity(EntityType type, Tile* tile);
+    vector<Tile*> GetAdjacentOpenTiles(Tile* tile);
+    Tile* SelectCreatureTile(Creature& creature);
     void MoveCreature(Creature& creature);
     string GetTrait();
     void ManageNutrientClusters();
-    void HandleNutrientConsumption(Creature& creature, Position position);
+    void HandleNutrientConsumption(Creature& creature, Tile* tile);
 };
 
 #endif

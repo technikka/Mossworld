@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "Position.h"
+#include "Tile.h"
 using namespace std;
 #ifndef CREATURE_H
 #define CREATURE_H
@@ -11,12 +12,13 @@ enum CreatureType { MOSSLING };
 
 class Creature {
    public:
-    Creature(CreatureType type, int id, Position position, string trait);
+    Creature(CreatureType type, int id, Tile* current_tile, string trait);
+    Tile* GetCurrentTile();
+    void SetCurrentTile(Tile* tile);
     string GetTypeString();
     char GetTypeSymbol();
     int GetId();
-    Position position;
-    vector<Position> position_history;
+    vector<Tile*> tile_history;
     string GetTrait();
     int energy;
     int GetMaxEnergy();
@@ -24,6 +26,7 @@ class Creature {
     void RestoreEnergy();
 
    private:
+    Tile* current_tile = nullptr;
     int id;
     CreatureType type;
     string trait;

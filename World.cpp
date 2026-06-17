@@ -49,17 +49,17 @@ void World::createTiles() {
     }
 }
 
-void World::CreateEntity(EntityType type, Position position) {
+void World::CreateEntity(EntityType type, Tile* tile) {
     switch (type) {
         case CREATURE: {
             string trait = GetTrait();
-            Creature mossling(MOSSLING, next_creature_id, position, trait);
+            Creature mossling(MOSSLING, next_creature_id, tile, trait);
             creatures.push_back(mossling);
             next_creature_id++;
             break;
         }
         case NUTRIENT_CLUSTER: {
-            NutrientCluster nutrients(NUTRIENT_CLUSTER, position);
+            NutrientCluster nutrients(NUTRIENT_CLUSTER, tile);
             nutrient_clusters.push_back(nutrients);
             break;
         }
@@ -69,7 +69,7 @@ void World::CreateEntity(EntityType type, Position position) {
     }
 }
 
-void World::RemoveEntity(EntityType type, Position position) {
+void World::RemoveEntity(EntityType type, Tile* tile) {
     switch (type) {
         case CREATURE: {
             // place holder
@@ -86,28 +86,21 @@ void World::RemoveEntity(EntityType type, Position position) {
     }
 };
 
-// Currently handles creating entity, and places randomly.
 // Places entity on random tile between start_id and end_id of Tile ID.
 void World::PlaceEntity(EntityType entity, int start_id, int end_id) {
-    Position position;
-    bool tile_is_empty;
+    Tile* tile = nullptr;
 
-    // * WARNING: infiniate loops potential if no empty tiles
     do {
         int rand_pos = rand() % (end_id - start_id);
         int tile_id = rand_pos + start_id;
 
-        position = Tile::IdToCoordinates(tile_id, width, height);
+        Position position = Tile::IdToCoordinates(tile_id, width, height);
+        tile = &tiles[position.y][position.x];
 
-        Tile& tile = tiles[position.y][position.x];
-        tile_is_empty = tile.occupant == EMPTY;
+    } while (tile->occupant != EMPTY);
 
-    } while (!tile_is_empty);
-
-    CreateEntity(entity, position);
-
-    Tile& tile = tiles[position.y][position.x];
-    tile.occupant = entity;
+    CreateEntity(entity, tile);
+    tile->occupant = entity;
 }
 
 void World::PlaceEntities(EntityType entity) {
@@ -124,8 +117,9 @@ void World::PlaceEntities(EntityType entity) {
     }
 }
 
-vector<Position> World::getAdjacentOpenPositions(Position position) {
+vector<Tile*> World::GetAdjacentOpenTiles(Tile* current_tile) {
     vector<Position> possible_positions;
+    Position position = current_tile->GetPosition();
     int x = position.x;
     int y = position.y;
 
@@ -134,53 +128,53 @@ vector<Position> World::getAdjacentOpenPositions(Position position) {
     possible_positions.push_back({x, y - 1});  // up
     possible_positions.push_back({x, y + 1});  // down
 
-    vector<Position> valid_positions;
+    vector<Tile*> valid_tiles;
+
     for (const Position& position : possible_positions) {
         if (position.x < 0 || position.x >= width) continue;
         if (position.y < 0 || position.y >= height) continue;
 
-        Tile& tile = tiles[position.y][position.x];
+        Tile* tile = &tiles[position.y][position.x];
 
         // EntityType CREATURE is the only obstacle to occupying a new tile.
-        if (tile.occupant != CREATURE) {
-            valid_positions.push_back(position);
-        }
-    }
-    return valid_positions;
-}
-
-Position World::selectPosition(Creature& creature) {
-    vector<Position> valid_positions =
-        getAdjacentOpenPositions(creature.position);
-
-    if (valid_positions.empty()) {
-        return creature.position;
-    }
-
-    // try to avoid back-tracking to previous position
-    if (creature.position_history.size() > 1 && valid_positions.size() > 1) {
-        Position previous_position =
-            creature.position_history.at(creature.position_history.size() - 2);
-        auto it = find(valid_positions.begin(), valid_positions.end(),
-                       previous_position);
-        if (it != valid_positions.end()) {
-            valid_positions.erase(it);
+        if (tile->occupant != CREATURE) {
+            valid_tiles.push_back(tile);
         }
     }
 
-    int rand_index = rand() % (valid_positions.size());
-
-    return valid_positions.at(rand_index);
+    return valid_tiles;
 }
 
-void World::HandleNutrientConsumption(Creature& creature, Position position) {
+Tile* World::SelectCreatureTile(Creature& creature) {
+    vector<Tile*> valid_tiles = GetAdjacentOpenTiles(creature.GetCurrentTile());
+
+    if (valid_tiles.empty()) {
+        return creature.GetCurrentTile();
+    }
+
+    // try to avoid back-tracking to previous tile
+    if (creature.tile_history.size() > 1 && valid_tiles.size() > 1) {
+        Tile* previous_tile =
+            creature.tile_history.at(creature.tile_history.size() - 2);
+        auto it = find(valid_tiles.begin(), valid_tiles.end(), previous_tile);
+        if (it != valid_tiles.end()) {
+            valid_tiles.erase(it);
+        }
+    }
+
+    int rand_index = rand() % (valid_tiles.size());
+
+    return valid_tiles.at(rand_index);
+}
+
+void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
     creature.RestoreEnergy();
     nutrient_cluster_count -= 1;
 
-    // remove nutrient cluster for its container
+    // remove nutrient cluster from its container
     auto it = find_if(nutrient_clusters.begin(), nutrient_clusters.end(),
-                      [position](const NutrientCluster& cluster) {
-                          return cluster.GetPosition() == position;
+                      [tile](const NutrientCluster& cluster) {
+                          return cluster.GetCurrentTile() == tile;
                       });
 
     if (it != nutrient_clusters.end()) {
@@ -190,22 +184,19 @@ void World::HandleNutrientConsumption(Creature& creature, Position position) {
 
 void World::MoveCreature(Creature& creature) {
     // update creature position
-    Position current_position = creature.position;
-    Position new_position = selectPosition(creature);
-    creature.position = new_position;
-    creature.position_history.push_back(new_position);
+    Tile* current_tile = creature.GetCurrentTile();
+    Tile* new_tile = SelectCreatureTile(creature);
 
-    // find tiles
-    Tile& current_tile = tiles[current_position.y][current_position.x];
-    Tile& new_tile = tiles[new_position.y][new_position.x];
-
-    if (new_tile.occupant == NUTRIENT_CLUSTER) {
-        HandleNutrientConsumption(creature, new_position);
+    if (new_tile->occupant == NUTRIENT_CLUSTER) {
+        HandleNutrientConsumption(creature, new_tile);
     }
 
+    creature.SetCurrentTile(new_tile);
+    creature.tile_history.push_back(new_tile);
+
     // update tiles
-    current_tile.occupant = EMPTY;
-    new_tile.occupant = CREATURE;
+    current_tile->occupant = EMPTY;
+    new_tile->occupant = CREATURE;
 }
 
 void World::ManageNutrientClusters() {

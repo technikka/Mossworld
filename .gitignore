@@ -4,3 +4,4 @@ experiment.cpp
 .vscode/
 main.dSYM/
 mossworld
+.DS_Store
