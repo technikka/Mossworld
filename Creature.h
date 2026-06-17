@@ -1,20 +1,21 @@
+#ifndef CREATURE_H
+#define CREATURE_H
+
 #include <string>
 #include <vector>
 
+#include "Entity.h"
 #include "Position.h"
 #include "Tile.h"
+
 using namespace std;
-#ifndef CREATURE_H
-#define CREATURE_H
 
 // * add creature types here
 enum CreatureType { MOSSLING };
 
-class Creature {
+class Creature : public Entity {
    public:
     Creature(CreatureType type, int id, Tile* current_tile, string trait);
-    Tile* GetCurrentTile();
-    void SetCurrentTile(Tile* tile);
     string GetTypeString();
     char GetTypeSymbol();
     int GetId();
@@ -26,7 +27,6 @@ class Creature {
     void RestoreEnergy();
 
    private:
-    Tile* current_tile = nullptr;
     int id;
     CreatureType type;
     string trait;

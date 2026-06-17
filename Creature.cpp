@@ -4,8 +4,8 @@ using namespace std;
 #include "Creature.h"
 #include "Position.h"
 
-Creature::Creature(CreatureType type, int id, Tile* current_tile,
-                   string trait) {
+Creature::Creature(CreatureType type, int id, Tile* current_tile, string trait)
+    : Entity(CREATURE, current_tile) {
     this->type = type;
     this->id = id;
     this->current_tile = current_tile;
@@ -14,10 +14,6 @@ Creature::Creature(CreatureType type, int id, Tile* current_tile,
     energy = 10;
     max_energy = 10;
 }
-
-Tile* Creature::GetCurrentTile() { return current_tile; }
-
-void Creature::SetCurrentTile(Tile* tile) { current_tile = tile; }
 
 char CreatureTypeToSymbol(CreatureType type) {
     switch (type) {
