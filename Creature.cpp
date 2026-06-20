@@ -32,6 +32,8 @@ string CreatureTypeToString(CreatureType type) {
 
 int Creature::GetId() { return id; }
 
+CreatureType Creature::GetType() { return type; }
+
 string Creature::GetTypeString() { return CreatureTypeToString(this->type); }
 char Creature::GetTypeSymbol() { return CreatureTypeToSymbol(this->type); }
 

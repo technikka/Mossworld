@@ -165,8 +165,9 @@ Tile* World::SelectCreatureTile(Creature& creature) {
 }
 
 void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
-    cout << "\n\n" +
-                Narration::NutrientFound(creature.energy, creature.GetTrait());
+    cout << "\n\n" + Narration::NutrientFound(creature.energy,
+                                              creature.GetType(),
+                                              creature.GetTrait());
     creature.RestoreEnergy();
     nutrient_cluster_count -= 1;
 
