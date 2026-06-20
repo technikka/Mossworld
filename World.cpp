@@ -3,6 +3,7 @@
 using namespace std;
 
 #include "Creature.h"
+#include "Narration.h"
 #include "Tile.h"
 #include "World.h"
 
@@ -164,6 +165,8 @@ Tile* World::SelectCreatureTile(Creature& creature) {
 }
 
 void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
+    cout << "\n\n" +
+                Narration::NutrientFound(creature.energy, creature.GetTrait());
     creature.RestoreEnergy();
     nutrient_cluster_count -= 1;
 
