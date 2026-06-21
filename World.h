@@ -23,8 +23,8 @@ class World {
     // * tiles[0][1] = first row, second column
     vector<vector<Tile>> tiles;
 
-    vector<Creature> creatures;
-    vector<NutrientCluster> nutrient_clusters;
+    vector<unique_ptr<Creature>> creatures;
+    vector<unique_ptr<NutrientCluster>> nutrient_clusters;
     vector<string> available_traits;
 
    private:

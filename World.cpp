@@ -57,14 +57,16 @@ Entity* World::CreateEntity(EntityType type, Tile* tile) {
         case CREATURE: {
             string trait = GetTrait();
             Creature mossling(MOSSLING, next_creature_id, tile, trait);
-            creatures.push_back(mossling);
+            creatures.push_back(make_unique<Creature>(mossling));
             next_creature_id++;
-            return &creatures.back();
+            // get() returns the raw pointer inside the unique_ptr
+            return creatures.back().get();
         }
         case NUTRIENT_CLUSTER: {
             NutrientCluster nutrients(tile);
-            nutrient_clusters.push_back(nutrients);
-            return &nutrient_clusters.back();
+            nutrient_clusters.push_back(
+                (make_unique<NutrientCluster>(nutrients)));
+            return nutrient_clusters.back().get();
         }
     }
 }
@@ -165,16 +167,16 @@ Tile* World::SelectCreatureTile(Creature& creature) {
 }
 
 void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
-    cout << "\n\n" + Narration::NutrientFound(creature.energy,
-                                              creature.GetType(),
-                                              creature.GetTrait());
+    cout << "\n\n"
+         << Narration::NutrientFound(creature.energy, creature.GetType(),
+                                     creature.GetTrait());
     creature.RestoreEnergy();
     nutrient_cluster_count -= 1;
 
     // remove nutrient cluster from its container
     auto it = find_if(nutrient_clusters.begin(), nutrient_clusters.end(),
-                      [tile](const NutrientCluster& cluster) {
-                          return cluster.GetCurrentTile() == tile;
+                      [tile](const auto& cluster) {
+                          return cluster->GetCurrentTile() == tile;
                       });
 
     if (it != nutrient_clusters.end()) {
@@ -213,9 +215,9 @@ void World::ManageNutrientClusters() {
 void World::advanceDay() {
     day++;
     ManageNutrientClusters();
-    for (Creature& creature : creatures) {
-        MoveCreature(creature);
-        creature.LoseDailyEnergy();
+    for (auto& creature : creatures) {
+        MoveCreature(*creature);
+        creature->LoseDailyEnergy();
     }
 }
 
@@ -235,9 +237,9 @@ void World::PrintHUD() {
 
     cout << "Day: " << day << "\n\n";
     cout << "------Energy------ \n";
-    for (Creature& creature : creatures) {
-        cout << creature.GetTrait() << " Mossling: " << creature.energy << '/'
-             << creature.GetMaxEnergy() << endl;
+    for (auto& creature : creatures) {
+        cout << creature->GetTrait() << " Mossling: " << creature->energy << '/'
+             << creature->GetMaxEnergy() << endl;
     }
     cout << "\nNutrient Clusters: " << nutrient_cluster_count << "\n\n";
 }
