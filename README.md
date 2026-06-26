@@ -45,6 +45,7 @@ Mossworld is in active development and currently includes:
 * Autonomous Mossling movement
 * Nutrient clusters that sustain life
 * An energy system
+* Goal-directed nutrient-seeking behavior
 * Procedural placement of entities
 * Nature-inspired narration
 * A modern C++ architecture built around an extensible entity system
