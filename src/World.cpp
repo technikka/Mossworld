@@ -1,9 +1,11 @@
 #include <algorithm>
 #include <iostream>
+#include <limits>
 using namespace std;
 
 #include "Creature.h"
 #include "Narration.h"
+#include "Position.h"
 #include "Tile.h"
 #include "World.h"
 
@@ -144,11 +146,44 @@ vector<Tile*> World::GetAdjacentOpenTiles(Tile* current_tile) {
     return valid_tiles;
 }
 
+Tile* World::SelectTileTowardObjective(Creature& creature,
+                                       const vector<Tile*>& valid_tiles) {
+    Tile* objective_tile = creature.GetObjective();
+    Tile* closest_tile = valid_tiles.at(0);
+    int closest_distance = creature.GetPosition().ManhattanDistanceTo(
+        objective_tile->GetPosition());
+
+    for (auto& tile : valid_tiles) {
+        int new_distance = tile->GetPosition().ManhattanDistanceTo(
+            objective_tile->GetPosition());
+
+        // if distance is less than current distance to objective
+        if (new_distance < closest_distance) {
+            closest_distance = new_distance;
+            closest_tile = tile;
+        }
+    }
+
+    if (closest_tile != creature.GetCurrentTile()) {
+        return closest_tile;
+    }
+    return nullptr;
+}
+
 Tile* World::SelectCreatureTile(Creature& creature) {
     vector<Tile*> valid_tiles = GetAdjacentOpenTiles(creature.GetCurrentTile());
 
     if (valid_tiles.empty()) {
         return creature.GetCurrentTile();
+    }
+
+    // select a valid tile that brings creature closer to objective
+    if (creature.HasObjective()) {
+        Tile* closer_tile = SelectTileTowardObjective(creature, valid_tiles);
+
+        if (closer_tile != nullptr) {
+            return closer_tile;
+        }
     }
 
     // try to avoid back-tracking to previous tile
@@ -168,8 +203,8 @@ Tile* World::SelectCreatureTile(Creature& creature) {
 
 void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
     cout << "\n\n"
-         << Narration::NutrientFound(creature.energy, creature.GetType(),
-                                     creature.GetTrait());
+         << Narration::NutrientFound(creature.GetNutrientNeed(),
+                                     creature.GetType(), creature.GetTrait());
     creature.RestoreEnergy();
     nutrient_cluster_count -= 1;
 
@@ -212,10 +247,70 @@ void World::ManageNutrientClusters() {
     }
 }
 
+Tile* World::FindNearestNutrientCluster(Creature& creature) {
+    Tile* nearest_tile = nullptr;
+    int shortest_distance = numeric_limits<int>::max();
+
+    Position creature_position = creature.GetPosition();
+
+    for (auto& nutrient_cluster : nutrient_clusters) {
+        Tile* nutrient_tile = nutrient_cluster->GetCurrentTile();
+
+        int distance = creature_position.ManhattanDistanceTo(
+            nutrient_cluster->GetPosition());
+
+        if (distance < shortest_distance) {
+            shortest_distance = distance;
+            nearest_tile = nutrient_tile;
+        }
+    }
+    return nearest_tile;
+}
+
+void World::SelectNutrientObjective(Creature& creature, int max_distance) {
+    Tile* tile = FindNearestNutrientCluster(creature);
+
+    if (tile == nullptr) {
+        return;
+    }
+
+    int distance =
+        creature.GetPosition().ManhattanDistanceTo(tile->GetPosition());
+
+    if (distance > max_distance) {
+        return;
+    }
+
+    creature.SetObjective(tile);
+}
+
+// currently only assessing NutrientNeed
+void World::AssessNeeds(Creature& creature) {
+    NutrientNeed nutrient_need = creature.GetNutrientNeed();
+
+    switch (nutrient_need) {
+        case NutrientNeed::High:
+            SelectNutrientObjective(creature, creature.GetEnergy());
+            break;
+        case NutrientNeed::Medium:
+            SelectNutrientObjective(creature, 2);
+            break;
+        case NutrientNeed::Low:
+            if (creature.HasObjective() &&
+                creature.GetObjective()->HasNutrientCluster()) {
+                creature.ClearObjective();
+            }
+            break;
+    }
+}
+
 void World::advanceDay() {
     day++;
     ManageNutrientClusters();
+
     for (auto& creature : creatures) {
+        // * dereferences the unique_ptr to pass the Creature by reference.
+        AssessNeeds(*creature);
         MoveCreature(*creature);
         creature->LoseDailyEnergy();
     }
@@ -238,8 +333,8 @@ void World::PrintHUD() {
     cout << "Day: " << day << "\n\n";
     cout << "------Energy------ \n";
     for (auto& creature : creatures) {
-        cout << creature->GetTrait() << " Mossling: " << creature->energy << '/'
-             << creature->GetMaxEnergy() << endl;
+        cout << creature->GetTrait() << " Mossling: " << creature->GetEnergy()
+             << '/' << creature->GetMaxEnergy() << endl;
     }
     cout << "\nNutrient Clusters: " << nutrient_cluster_count << "\n\n";
 }

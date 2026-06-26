@@ -32,6 +32,18 @@ string CreatureTypeToString(CreatureType type) {
 
 int Creature::GetId() { return id; }
 
+int Creature::GetEnergy() const { return energy; }
+
+NutrientNeed Creature::GetNutrientNeed() const {
+    if (energy <= 2) {
+        return NutrientNeed::High;
+    } else if (energy <= 6) {
+        return NutrientNeed::Medium;
+    } else {
+        return NutrientNeed::Low;
+    }
+}
+
 CreatureType Creature::GetType() { return type; }
 
 string Creature::GetTypeString() { return CreatureTypeToString(this->type); }
@@ -46,3 +58,16 @@ void Creature::LoseDailyEnergy() { energy -= 1; }
 void Creature::RestoreEnergy() {
     energy = max_energy + 1;
 }  // +1 so that new day starts with 10/10
+
+Tile* Creature::GetObjective() const { return objective_tile; }
+
+void Creature::SetObjective(Tile* tile) { objective_tile = tile; }
+
+void Creature::ClearObjective() { objective_tile = nullptr; }
+
+bool Creature::HasObjective() const {
+    if (objective_tile != nullptr) {
+        return true;
+    }
+    return false;
+}

@@ -48,6 +48,11 @@ class World {
     string GetTrait();
     void ManageNutrientClusters();
     void HandleNutrientConsumption(Creature& creature, Tile* tile);
+    void AssessNeeds(Creature& creature);
+    void SelectNutrientObjective(Creature& creature, int max_energy);
+    Tile* FindNearestNutrientCluster(Creature& creature);
+    Tile* SelectTileTowardObjective(Creature& creature,
+                                    const vector<Tile*>& valid_tiles);
 };
 
 #endif

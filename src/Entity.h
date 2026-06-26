@@ -4,6 +4,7 @@
 #include <string>
 
 #include "EntityType.h"
+#include "Position.h"
 
 // Forward declaration.
 class Tile;
@@ -11,6 +12,7 @@ class Tile;
 class Entity {
    public:
     Entity(EntityType type, Tile* current_tile);
+    Position GetPosition() const;
 
     Tile* GetCurrentTile() const;
     void SetCurrentTile(Tile* tile);

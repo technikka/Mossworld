@@ -7,7 +7,7 @@
 
 namespace Narration {
 
-std::string NutrientFound(int energy, CreatureType type,
+std::string NutrientFound(NutrientNeed need, CreatureType type,
                           const std::string& trait);
 
 }

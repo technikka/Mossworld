@@ -6,14 +6,15 @@ using namespace std;
 
 namespace Narration {
 
-string NutrientFound(int energy, CreatureType type, const string& trait) {
+string NutrientFound(NutrientNeed need, CreatureType type,
+                     const string& trait) {
     string creature_type = CreatureTypeToString(type);
-    if (energy <= 2) {
+    if (need == NutrientNeed::High) {
         return "The " + trait + ' ' + creature_type +
                " uncovers a nutrient cluster not a moment too soon.";
     }
 
-    if (energy <= 6) {
+    if (need == NutrientNeed::Medium) {
         return "After a long search, the " + trait + ' ' + creature_type +
                " discovers a welcome nutrient cluster.";
     }
