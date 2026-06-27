@@ -149,7 +149,7 @@ vector<Tile*> World::GetAdjacentOpenTiles(Tile* current_tile) {
 Tile* World::SelectTileTowardObjective(Creature& creature,
                                        const vector<Tile*>& valid_tiles) {
     Tile* objective_tile = creature.GetObjective();
-    Tile* closest_tile = valid_tiles.at(0);
+    Tile* closest_tile = creature.GetCurrentTile();
     int closest_distance = creature.GetPosition().ManhattanDistanceTo(
         objective_tile->GetPosition());
 
@@ -290,16 +290,13 @@ void World::AssessNeeds(Creature& creature) {
 
     switch (nutrient_need) {
         case NutrientNeed::High:
-            SelectNutrientObjective(creature, creature.GetEnergy());
+            // once death implemented: change to creature.GetEnergy()
+            SelectNutrientObjective(creature, creature.GetMaxEnergy());
             break;
         case NutrientNeed::Medium:
             SelectNutrientObjective(creature, 2);
             break;
         case NutrientNeed::Low:
-            if (creature.HasObjective() &&
-                creature.GetObjective()->HasNutrientCluster()) {
-                creature.ClearObjective();
-            }
             break;
     }
 }
@@ -309,10 +306,11 @@ void World::advanceDay() {
     ManageNutrientClusters();
 
     for (auto& creature : creatures) {
+        creature->LoseDailyEnergy();
+        creature->ClearObjective();
         // * dereferences the unique_ptr to pass the Creature by reference.
         AssessNeeds(*creature);
         MoveCreature(*creature);
-        creature->LoseDailyEnergy();
     }
 }
 

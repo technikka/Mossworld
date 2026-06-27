@@ -53,11 +53,13 @@ string Creature::GetTrait() { return trait; }
 
 int Creature::GetMaxEnergy() { return max_energy; }
 
-void Creature::LoseDailyEnergy() { energy -= 1; }
+void Creature::LoseDailyEnergy() {
+    if (energy > 0) {
+        energy -= 1;
+    }
+}
 
-void Creature::RestoreEnergy() {
-    energy = max_energy + 1;
-}  // +1 so that new day starts with 10/10
+void Creature::RestoreEnergy() { energy = max_energy; }
 
 Tile* Creature::GetObjective() const { return objective_tile; }
 
