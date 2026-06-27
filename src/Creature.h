@@ -20,7 +20,6 @@ class Creature : public Entity {
 
     // * Getters
     std::string GetTypeString();
-    char GetTypeSymbol();
     CreatureType GetType();
     int GetId();
     std::string GetTrait();
@@ -46,6 +45,7 @@ class Creature : public Entity {
     int max_energy;
     // more than one creature can share an objective
     Tile* objective_tile = nullptr;
+    char TraitToSymbol() const;
 };
 
 #endif

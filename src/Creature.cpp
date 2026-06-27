@@ -12,15 +12,10 @@ Creature::Creature(CreatureType type, int id, Tile* current_tile, string trait)
     tile_history.push_back(current_tile);
     energy = 10;
     max_energy = 10;
+    symbol = TraitToSymbol();
 }
 
-char CreatureTypeToSymbol(CreatureType type) {
-    switch (type) {
-        case MOSSLING:
-            return 'k';
-    }
-    return '?';  // should never be reached
-}
+char Creature::TraitToSymbol() const { return tolower(trait[0]); }
 
 string CreatureTypeToString(CreatureType type) {
     switch (type) {
@@ -47,7 +42,6 @@ NutrientNeed Creature::GetNutrientNeed() const {
 CreatureType Creature::GetType() { return type; }
 
 string Creature::GetTypeString() { return CreatureTypeToString(this->type); }
-char Creature::GetTypeSymbol() { return CreatureTypeToSymbol(this->type); }
 
 string Creature::GetTrait() { return trait; }
 

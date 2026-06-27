@@ -10,10 +10,9 @@ using namespace std;
 #include "World.h"
 
 vector<string> mossling_traits = {
-    "Curious",  "Cautious",   "Restless", "Patient", "Timid",
-    "Bold",     "Gentle",     "Wary",     "Dreamy",  "Cheerful",
-    "Quiet",    "Thoughtful", "Steady",   "Nimble",  "Wandering",
-    "Diligent", "Observant",  "Playful",  "Calm",    "Hopeful"};
+    "Bold",   "Diligent",  "Friendly", "Gentle",     "Humble",
+    "Joyful", "Keen",      "Mindful",  "Nimble",     "Patient",
+    "Quiet",  "Resilient", "Serene",   "Thoughtful", "Watchful"};
 
 World::World(int width, int height) {
     this->width = width;

@@ -18,9 +18,12 @@ class Entity {
     void SetCurrentTile(Tile* tile);
     EntityType GetType() const;
 
+    char GetSymbol() const;
+
    protected:
     Tile* current_tile = nullptr;
     EntityType type;
+    char symbol;
 };
 
 #endif

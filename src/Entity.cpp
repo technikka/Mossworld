@@ -14,3 +14,5 @@ void Entity::SetCurrentTile(Tile* tile) { current_tile = tile; }
 EntityType Entity::GetType() const { return type; }
 
 Position Entity::GetPosition() const { return GetCurrentTile()->GetPosition(); }
+
+char Entity::GetSymbol() const { return symbol; }

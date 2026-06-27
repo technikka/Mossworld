@@ -36,7 +36,7 @@ char Tile::GetSymbol() const {
         return '.';
     }
 
-    return EntityTypeToChar(occupant->GetType());
+    return occupant->GetSymbol();
 }
 
 Position Tile::GetPosition() {
