@@ -6,10 +6,11 @@
 #include "Creature.h"
 #include "NutrientCluster.h"
 #include "Tile.h"
+#include "WorldConfig.h"
 
 class World {
    public:
-    World(int width = 9, int height = 6);
+    World(WorldConfig& config);
     int GetWidth();
     int GetHeight();
     void Print();
@@ -28,11 +29,12 @@ class World {
     vector<string> available_traits;
 
    private:
+    WorldConfig config;
     int height;
     int width;
     int creature_count;
-    int nutrient_cluster_start_count = 4;
-    int creature_start_count = 3;
+    int nutrient_cluster_start_count;
+    int creature_start_count;
     int nutrient_cluster_count;
     int next_creature_id = 1;
     int day = 1;

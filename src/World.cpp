@@ -14,16 +14,19 @@ vector<string> mossling_traits = {
     "Joyful", "Keen",      "Mindful",  "Nimble",     "Patient",
     "Quiet",  "Resilient", "Serene",   "Thoughtful", "Watchful"};
 
-World::World(int width, int height) {
-    this->width = width;
-    this->height = height;
-    this->creature_count = creature_start_count;
-    this->nutrient_cluster_count = nutrient_cluster_start_count;
+World::World(WorldConfig& config)
+    : config(config),
+      width(config.width),
+      height(config.height),
+      creature_count(config.creature_start_count),
+      nutrient_cluster_count(config.nutrient_cluster_start_count)
+
+{
     available_traits = mossling_traits;
 
     // prevent vector reallocation from invalidating tile occupant pointers
-    creatures.reserve(creature_start_count);
-    nutrient_clusters.reserve(nutrient_cluster_start_count);
+    creatures.reserve(config.creature_start_count);
+    nutrient_clusters.reserve(config.nutrient_cluster_start_count);
 
     this->createTiles();
     this->PlaceEntities(CREATURE);
@@ -236,10 +239,10 @@ void World::MoveCreature(Creature& creature) {
 }
 
 void World::ManageNutrientClusters() {
-    // spawn a new cluster every fifth day
-    bool multiple_of_five = (day % 5 == 0);
-    if (multiple_of_five &&
-        nutrient_cluster_count < nutrient_cluster_start_count) {
+    // spawn a new cluster every [nutrient_spawn_interval] days
+    bool multiple_of_interval = (day % config.nutrient_spawn_interval == 0);
+    if (multiple_of_interval &&
+        nutrient_cluster_count < config.nutrient_cluster_start_count) {
         // place on any random tile index
         PlaceEntity(NUTRIENT_CLUSTER, 0, ((height * width)));
         nutrient_cluster_count++;
