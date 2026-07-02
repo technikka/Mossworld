@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iomanip>  // for printing
 #include <iostream>
 #include <limits>
 using namespace std;
@@ -7,6 +8,7 @@ using namespace std;
 #include "Narration.h"
 #include "Position.h"
 #include "Tile.h"
+#include "ViewMode.h"
 #include "World.h"
 
 vector<string> mossling_traits = {
@@ -16,6 +18,7 @@ vector<string> mossling_traits = {
 
 World::World(WorldConfig& config)
     : config(config),
+      view_mode(config.view_mode),
       width(config.width),
       height(config.height),
       creature_count(config.creature_start_count),
@@ -89,10 +92,23 @@ void World::RemoveEntity(EntityType type, Tile* tile) {
     }
 };
 
-// Places entity on random tile between start_id and end_id of Tile ID.
-void World::PlaceEntity(EntityType type, int start_id, int end_id) {
-    Tile* tile = nullptr;
+vector<pair<int, int>> World::GetLinearZones(int zone_count) const {
+    vector<pair<int, int>> zones;
 
+    int number_of_tiles = width * height;
+
+    for (int i = 0; i < zone_count; i++) {
+        int start_id = (i * number_of_tiles) / zone_count;
+        int end_id = ((i + 1) * number_of_tiles) / zone_count;
+
+        zones.push_back({start_id, end_id});
+    }
+
+    return zones;
+}
+
+Tile* World::SelectRandomEmptyTile(int start_id, int end_id) {
+    Tile* tile = nullptr;
     do {
         int rand_pos = rand() % (end_id - start_id);
         int tile_id = rand_pos + start_id;
@@ -101,22 +117,74 @@ void World::PlaceEntity(EntityType type, int start_id, int end_id) {
         tile = &tiles[position.y][position.x];
 
     } while (!tile->IsEmpty());
+    return tile;
+}
 
+// Places entity on random tile between start_id and end_id of Tile ID.
+void World::PlaceEntity(EntityType type, int start_id, int end_id) {
+    Tile* tile = SelectRandomEmptyTile(start_id, end_id);
     Entity* entity = CreateEntity(type, tile);
     tile->SetOccupant(entity);
 }
 
 void World::PlaceEntities(EntityType entity) {
-    int number_of_tiles = (height * width);
-    int entity_count = GetEntityCount(entity);
-    unsigned int counter = 0;
-    for (int i = 0; i < entity_count; i++) {
-        int start_id = counter;
-        // divide the tile space proportionally:
-        int end_id = ((i + 1.0) / entity_count) * number_of_tiles;
+    auto zones = GetLinearZones(GetEntityCount(entity));
 
-        PlaceEntity(entity, start_id, end_id);
-        counter = end_id;
+    for (const auto& zone : zones) {
+        PlaceEntity(entity, zone.first, zone.second);
+    }
+}
+
+void World::ApplyMoistureRing(Tile* tile, int amount, int distance,
+                              double percent) {
+    Position pos = tile->GetPosition();
+    int spread_amount = amount * percent;
+
+    for (int y_offset = -distance; y_offset <= distance; y_offset++) {
+        for (int x_offset = -distance; x_offset <= distance; x_offset++) {
+            if (x_offset == 0 && y_offset == 0) {
+                continue;
+            }
+
+            if (abs(x_offset) != distance && abs(y_offset) != distance) {
+                continue;
+            }
+
+            int new_x = pos.x + x_offset;
+            int new_y = pos.y + y_offset;
+
+            if (new_y < 0 || new_y >= height || new_x < 0 || new_x >= width) {
+                continue;
+            }
+
+            tiles[new_y][new_x].AddMoisture(spread_amount, config.max_moisture);
+        }
+    }
+}
+
+void World::PlaceMoistureSpread(Tile* tile, int amount, int spread_distance) {
+    // First ring of tiles gets 70% moisture.
+    double percent = 0.7;
+    for (int i = 1; i <= spread_distance; i++) {
+        ApplyMoistureRing(tile, amount, i, percent);
+        percent *= 0.5;
+    }
+}
+
+void World::PlaceMoistureSource(int amount, int start_id, int end_id,
+                                int spread_distance) {
+    Tile* tile = SelectRandomEmptyTile(start_id, end_id);
+    tile->AddMoisture(amount, config.max_moisture);
+    PlaceMoistureSpread(tile, amount, spread_distance);
+}
+
+void World::PlaceMoistureSources(int initial_amount, int sources,
+                                 int spread_distance) {
+    auto zones = GetLinearZones(config.moisture_sources);
+
+    for (const auto& zone : zones) {
+        PlaceMoistureSource(initial_amount, zone.first, zone.second,
+                            spread_distance);
     }
 }
 
@@ -303,10 +371,31 @@ void World::AssessNeeds(Creature& creature) {
     }
 }
 
-void World::advanceDay() {
+void World::ClearMoisture() {
+    for (auto& row : tiles) {
+        for (auto& tile : row) {
+            tile.SetMoisture(0);
+        }
+    }
+}
+
+void World::AddMorningDew() {
+    PlaceMoistureSources(config.morning_dew_moisture, config.moisture_sources,
+                         config.dew_spread_distance);
+}
+
+void World::ApplyEnvironmentalConditions() {
+    ClearMoisture();  // reset then regenerate for now
+    AddMorningDew();
+};
+
+void World::BeginDay() {
     day++;
     ManageNutrientClusters();
+    ApplyEnvironmentalConditions();
+}
 
+void World::RunCreatures() {
     for (auto& creature : creatures) {
         creature->LoseDailyEnergy();
         creature->ClearObjective();
@@ -316,30 +405,96 @@ void World::advanceDay() {
     }
 }
 
-void World::Print() {
-    cout << "\n\n";  // space above world
+void World::SetViewMode(ViewMode mode) { view_mode = mode; }
+
+ViewMode World::GetViewMode(ViewMode mode) { return mode; }
+
+void World::PrintView() {
+    switch (view_mode) {
+        case ViewMode::World:
+            PrintWorldView();
+            break;
+        case ViewMode::Moisture:
+            PrintMoistureView();
+            break;
+    }
+}
+
+void World::Observe() {
+    PrintView();
+    PrintStatusBar();
+    PrintEnergyBar();
+    PrintObserverMenu();
+}
+
+void World::PrintMoistureView() {
+    cout << "\n" << right;  // space above world
     for (int row = 0; row < height; row++) {
+        cout << string(config.left_margin, ' ');
         for (int column = 0; column < width; column++) {
-            cout << ' ' << tiles[row][column].GetSymbol() << ' ';
+            cout << setw(4) << tiles[row][column].GetMoisture();
         }
         cout << endl;
     }
     cout << endl;
 }
 
-void World::PrintHUD() {
-    cout << "\n\n";  // space beneath world
-
-    cout << "Day: " << day << "\n\n";
-    cout << "------Energy------ \n";
-    for (auto& creature : creatures) {
-        cout << creature->GetTrait() << " Mossling: " << creature->GetEnergy()
-             << '/' << creature->GetMaxEnergy() << endl;
+void World::PrintWorldView() {
+    cout << "\n" << right;  // space above world
+    for (int row = 0; row < height; row++) {
+        cout << string(config.left_margin, ' ');
+        for (int column = 0; column < width; column++) {
+            cout << setw(4) << tiles[row][column].GetSymbol();
+        }
+        cout << endl;
     }
-    cout << "\nNutrient Clusters: " << nutrient_cluster_count << "\n\n";
+    cout << endl;
 }
 
-// selects random trait from available then updates available_traits
+string World::EnergyBar(int energy, int max_energy) {
+    string bar = "[";
+
+    for (int i = 0; i < max_energy; i++) {
+        if (i < energy) {
+            bar += "■";
+        } else {
+            bar += "□";
+        }
+    }
+
+    bar += "]";
+
+    return bar;
+}
+
+void World::PrintObserverMenu() const {
+    cout << "\n";
+    cout << "A new day is unfolding.\n\n";
+    cout << " Observe ➜ Enter |  Switch View ➜ 1: World  2: Moisture  |  Leave "
+            "➜ "
+            "'exit'\n";
+    cout << "❯ ";
+}
+
+void World::PrintStatusBar() const {
+    cout << "\n";
+    cout << " Day: " << left << setw(5) << day << " Mosslings: " << setw(5)
+         << creature_count << " Nutrient Clusters: " << setw(5)
+         << nutrient_cluster_count << "Viewing: " << ModeToString(view_mode)
+         << "\n";
+    cout << "\n";
+}
+
+void World::PrintEnergyBar() {
+    cout << "\n";
+    cout << "──── Mossling Vitality ─────\n";
+    for (auto& creature : creatures) {
+        cout << creature->GetTrait() << " Mossling: "
+             << EnergyBar(creature->GetEnergy(), creature->GetMaxEnergy())
+             << endl;
+    }
+}
+
 string World::GetTrait() {
     // refresh available_traits when used up
     string trait;

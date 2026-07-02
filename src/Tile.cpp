@@ -1,12 +1,15 @@
+#include <algorithm>
 #include <iostream>
 using namespace std;
 
 #include "Tile.h"
+#include "WorldConfig.h"
 
 Tile::Tile(int id, int x, int y) {
     this->id = id;
     this->x = x;
     this->y = y;
+    moisture = 0;
 };
 
 Tile::Tile() {
@@ -54,3 +57,11 @@ Position Tile::IdToCoordinates(int tile_id, int world_width, int world_height) {
     position.y = y;
     return position;
 }
+
+int Tile::GetMoisture() const { return moisture; };
+
+void Tile::AddMoisture(int amount, int max_moisture) {
+    moisture = clamp(moisture + amount, 0, max_moisture);
+};
+
+void Tile::SetMoisture(int moisture) { this->moisture = moisture; }

@@ -13,23 +13,32 @@ class World {
     World(WorldConfig& config);
     int GetWidth();
     int GetHeight();
-    void Print();
-    void PrintHUD();
-    void advanceDay();
+    void PrintView();
+    void PrintWorldView();
+    void PrintMoistureView();
+    void PrintStatusBar() const;
+    void PrintEnergyBar();
+    void PrintObserverMenu() const;
+    void BeginDay();
+    void Observe();
+    void RunCreatures();
     int GetEntityCount(EntityType type);
+    void SetViewMode(ViewMode mode);
+    ViewMode GetViewMode(ViewMode mode);
 
     // * Grid indexing:
     // * tiles[row][column]
     // * tiles[0] = first row
     // * tiles[0][1] = first row, second column
-    vector<vector<Tile>> tiles;
+    std::vector<std::vector<Tile>> tiles;
 
-    vector<unique_ptr<Creature>> creatures;
-    vector<unique_ptr<NutrientCluster>> nutrient_clusters;
-    vector<string> available_traits;
+    std::vector<std::unique_ptr<Creature>> creatures;
+    std::vector<std::unique_ptr<NutrientCluster>> nutrient_clusters;
+    std::vector<std::string> available_traits;
 
    private:
     WorldConfig config;
+    ViewMode view_mode;
     int height;
     int width;
     int creature_count;
@@ -44,17 +53,29 @@ class World {
     void PlaceEntities(EntityType entity);
     Entity* CreateEntity(EntityType type, Tile* tile);
     void RemoveEntity(EntityType type, Tile* tile);
-    vector<Tile*> GetAdjacentOpenTiles(Tile* tile);
+    std::vector<Tile*> GetAdjacentOpenTiles(Tile* tile);
     Tile* SelectCreatureTile(Creature& creature);
     void MoveCreature(Creature& creature);
-    string GetTrait();
+    std::string GetTrait();
     void ManageNutrientClusters();
     void HandleNutrientConsumption(Creature& creature, Tile* tile);
     void AssessNeeds(Creature& creature);
     void SelectNutrientObjective(Creature& creature, int max_energy);
     Tile* FindNearestNutrientCluster(Creature& creature);
     Tile* SelectTileTowardObjective(Creature& creature,
-                                    const vector<Tile*>& valid_tiles);
+                                    const std::vector<Tile*>& valid_tiles);
+    std::vector<std::pair<int, int>> GetLinearZones(int zone_count) const;
+    void AddMorningDew();
+    void PlaceMoistureSources(int initial_amount, int sources,
+                              int spread_distance);
+    void PlaceMoistureSource(int amount, int start_id, int end_id,
+                             int spread_distance);
+    void ApplyEnvironmentalConditions();
+    void PlaceMoistureSpread(Tile* tile, int amount, int spread_distance);
+    void ApplyMoistureRing(Tile* tile, int amount, int radius, double percent);
+    Tile* SelectRandomEmptyTile(int start_id, int end_id);
+    void ClearMoisture();
+    string EnergyBar(int energy, int max_energy);
 };
 
 #endif
