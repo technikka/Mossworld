@@ -1,3 +1,35 @@
+## July 2, 2026
+
+Mossworld now has its first environmental system: moisture. This update also introduces observer views and a major UI refresh.
+
+### What I Built
+
+- Added moisture as a property of each tile.
+- Implemented moisture generation and spreading.
+- Added a moisture observer view and support for switching between observer views.
+- Refactored the simulation loop into `BeginDay()`, `Observe()`, and `RunCreatures()`.
+- Updated the observer UI to better support multiple views.
+
+### Why
+
+- Moisture is the first environmental system in Mossworld and lays the foundation for future environmental simulation.
+- Observer views make it possible to inspect different aspects of the world without changing the simulation itself.
+- Separating the simulation loop makes each stage of a day more explicit and easier to expand with future systems.
+
+### What I Learned
+
+- std::clamp() provides a concise way to constrain values within a valid range.
+- auto is most useful when it improves readability without hiding important type information.
+- Environmental systems and observer tools are separate concerns and benefit from being designed independently.
+
+
+### Next
+
+- Give Mosslings an IdealMoisture attribute that influences their movement decisions.
+
+---
+
+
 ## June 27, 2026
 
 Mosslings have objectives and nutrient seeking behavior.
