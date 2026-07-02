@@ -11,7 +11,9 @@ using namespace std;
 int main() {
     srand(time(0));  // seed rand
 
-    cout << "\nWelcome to Mossworld.\n";
+    cout << "\n";
+    cout << "──────────────────────────────────────────────────────────────\n";
+    cout << "Welcome to Mossworld.\n";
     cout << "Tiny creatures stir among the morning dew.\n\n";
 
     WorldConfig config;
@@ -20,19 +22,32 @@ int main() {
     string input;
 
     while (true) {
-        world.Print();
-        world.PrintHUD();
+        world.Observe();
 
-        cout << "\nA new day is unfolding. Observe? (Press Enter or 'exit' to "
-                "quit)";
+        while (true) {
+            getline(cin, input);
 
-        getline(std::cin, input);
+            if (input.empty()) {
+                break;  // advance simulation
+            }
 
-        if (input == "exit") {
-            break;
+            if (input == "exit") {
+                return 0;
+            }
+
+            if (input == "1") {
+                world.SetViewMode(ViewMode::World);
+                world.Observe();
+            }
+
+            if (input == "2") {
+                world.SetViewMode(ViewMode::Moisture);
+                world.Observe();
+            }
         }
 
-        world.advanceDay();
+        world.BeginDay();
+        world.RunCreatures();
     }
 
     return 0;
