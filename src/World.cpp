@@ -216,28 +216,55 @@ vector<Tile*> World::GetAdjacentOpenTiles(Tile* current_tile) {
     return valid_tiles;
 }
 
-Tile* World::SelectTileTowardObjective(Creature& creature,
-                                       const vector<Tile*>& valid_tiles) {
+int World::ScoreObjective(Tile& tile, Creature& creature) {
     Tile* objective_tile = creature.GetObjective();
-    Tile* closest_tile = creature.GetCurrentTile();
-    int closest_distance = creature.GetPosition().ManhattanDistanceTo(
-        objective_tile->GetPosition());
+    Tile* creature_tile = creature.GetCurrentTile();
+    int current_distance = objective_tile->GetPosition().ManhattanDistanceTo(
+        creature_tile->GetPosition());
+    int new_distance =
+        objective_tile->GetPosition().ManhattanDistanceTo(tile.GetPosition());
 
-    for (auto& tile : valid_tiles) {
-        int new_distance = tile->GetPosition().ManhattanDistanceTo(
-            objective_tile->GetPosition());
-
-        // if distance is less than current distance to objective
-        if (new_distance < closest_distance) {
-            closest_distance = new_distance;
-            closest_tile = tile;
-        }
+    if (new_distance < current_distance) {
+        return 10;
+    } else if (new_distance == current_distance) {
+        return 5;
     }
 
-    if (closest_tile != creature.GetCurrentTile()) {
-        return closest_tile;
+    return 0;
+}
+
+int World::ScoreMoisture(Tile& tile, Creature& creature) {
+    int moisture_difference =
+        abs(tile.GetMoisture() - creature.GetIdealMoisture());
+
+    return 10 - moisture_difference;
+}
+
+int World::ScoreBacktracking(Tile& tile, Creature& creature) {
+    Tile* previous_tile =
+        creature.tile_history.at(creature.tile_history.size() - 2);
+
+    if (previous_tile == &tile) {
+        return -5;
     }
-    return nullptr;
+
+    return 0;
+}
+
+int World::ScoreTile(Tile& tile, Creature& creature) {
+    int score = 0;
+
+    if (creature.HasObjective()) {
+        score += ScoreObjective(tile, creature);
+    }
+
+    score += ScoreMoisture(tile, creature);
+
+    if (creature.tile_history.size() > 1) {
+        score += ScoreBacktracking(tile, creature);
+    }
+
+    return score;
 }
 
 Tile* World::SelectCreatureTile(Creature& creature) {
@@ -247,28 +274,25 @@ Tile* World::SelectCreatureTile(Creature& creature) {
         return creature.GetCurrentTile();
     }
 
-    // select a valid tile that brings creature closer to objective
-    if (creature.HasObjective()) {
-        Tile* closer_tile = SelectTileTowardObjective(creature, valid_tiles);
+    struct TileScore {
+        Tile* tile;
+        int score;
+    };
 
-        if (closer_tile != nullptr) {
-            return closer_tile;
+    vector<TileScore> tile_scores;
+    Tile* highest_scoring_tile = valid_tiles.front();
+    // Double scores first tile for now.
+    int highest_score = ScoreTile(*highest_scoring_tile, creature);
+
+    // Score each valid tile based on creature needs & preferences.
+    for (auto& tile : valid_tiles) {
+        TileScore tile_score{tile, ScoreTile(*tile, creature)};
+        tile_scores.push_back(tile_score);
+        if (tile_score.score > highest_score) {
+            highest_scoring_tile = tile;
+            highest_score = tile_score.score;
         }
     }
-
-    // try to avoid back-tracking to previous tile
-    if (creature.tile_history.size() > 1 && valid_tiles.size() > 1) {
-        Tile* previous_tile =
-            creature.tile_history.at(creature.tile_history.size() - 2);
-        auto it = find(valid_tiles.begin(), valid_tiles.end(), previous_tile);
-        if (it != valid_tiles.end()) {
-            valid_tiles.erase(it);
-        }
-    }
-
-    int rand_index = rand() % (valid_tiles.size());
-
-    return valid_tiles.at(rand_index);
 }
 
 void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
@@ -491,7 +515,7 @@ void World::PrintEnergyBar() {
     for (auto& creature : creatures) {
         cout << creature->GetTrait() << " Mossling: "
              << EnergyBar(creature->GetEnergy(), creature->GetMaxEnergy())
-             << endl;
+             << " M: " << creature->GetIdealMoisture() << endl;
     }
 }
 

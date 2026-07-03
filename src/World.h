@@ -62,8 +62,6 @@ class World {
     void AssessNeeds(Creature& creature);
     void SelectNutrientObjective(Creature& creature, int max_energy);
     Tile* FindNearestNutrientCluster(Creature& creature);
-    Tile* SelectTileTowardObjective(Creature& creature,
-                                    const std::vector<Tile*>& valid_tiles);
     std::vector<std::pair<int, int>> GetLinearZones(int zone_count) const;
     void AddMorningDew();
     void PlaceMoistureSources(int initial_amount, int sources,
@@ -76,6 +74,10 @@ class World {
     Tile* SelectRandomEmptyTile(int start_id, int end_id);
     void ClearMoisture();
     string EnergyBar(int energy, int max_energy);
+    int ScoreTile(Tile& tile, Creature& creature);
+    int ScoreObjective(Tile& tile, Creature& creature);
+    int ScoreMoisture(Tile& tile, Creature& creature);
+    int ScoreBacktracking(Tile& tile, Creature& creature);
 };
 
 #endif

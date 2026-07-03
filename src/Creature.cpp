@@ -13,6 +13,7 @@ Creature::Creature(CreatureType type, int id, Tile* current_tile, string trait)
     energy = 10;
     max_energy = 10;
     symbol = TraitToSymbol();
+    ideal_moisture = rand() % 10 + 1;
 }
 
 char Creature::TraitToSymbol() const { return tolower(trait[0]); }
@@ -67,3 +68,5 @@ bool Creature::HasObjective() const {
     }
     return false;
 }
+
+int Creature::GetIdealMoisture() { return ideal_moisture; }

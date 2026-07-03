@@ -27,6 +27,7 @@ class Creature : public Entity {
     Tile* GetObjective() const;
     int GetEnergy() const;
     NutrientNeed GetNutrientNeed() const;
+    int GetIdealMoisture();
 
     // * Setters
     void SetObjective(Tile* tile);
@@ -40,6 +41,7 @@ class Creature : public Entity {
    private:
     int energy;
     int id;
+    int ideal_moisture;
     CreatureType type;
     std::string trait;
     int max_energy;
