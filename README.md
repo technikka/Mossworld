@@ -49,5 +49,9 @@ Mossworld is in active development and currently includes:
 * Procedural placement of entities
 * Nature-inspired narration
 * A modern C++ architecture built around an extensible entity system
+* The simulation's first environmental system: a moisture layer that shapes autonomous movement
+* A flexible tile scoring system that supports increasingly sophisticated decision-making
+* Switchable world and environmental observation views for exploring different aspects of the simulation
+
 
 While the simulation is still in its early stages, the focus has been on building a solid architectural foundation that will support richer behavior as the project grows.
