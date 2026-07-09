@@ -2,9 +2,9 @@
 
 *Welcome to Mossworld. Tiny creatures stir among the morning dew.*
 
-Mossworld is a cozy artificial life simulation set within a tiny forest-floor ecosystem. Built in modern C++, it is a long-term exploration of artificial life, simulation engineering, and emergent behavior through the lens of a small living world.
+Mossworld is a cozy artificial life simulation set within a tiny forest-floor ecosystem. Built in modern C++, it is an exploration of artificial life, simulation engineering, and emergent behavior through the lens of a small living world.
 
-The player is not a ruler or manager—they are simply an observer. Each day, Mosslings wander through their world searching for nourishment, and over time, increasingly complex behaviors and interactions arise from simple rules.
+The player is not a ruler or manager—they are simply an observer. Each day, Mosslings wander through their tiny living world as morning dew settles, soil fertility slowly changes, and nutrient clusters appear and fade with the changing environment. As the world and its inhabitants quietly influence one another, increasingly complex behaviors and gentle, emergent stories arise from simple rules.
 
 
 ## Vision
@@ -41,17 +41,32 @@ I expect Mossworld to remain a long-term project, growing alongside my understan
 
 Mossworld is in active development and currently includes:
 
-* A tile-based world simulation
-* Autonomous Mossling movement
-* Nutrient clusters that sustain life
-* An energy system
-* Goal-directed nutrient-seeking behavior
-* Procedural placement of entities
-* Nature-inspired narration
-* A modern C++ architecture built around an extensible entity system
-* The simulation's first environmental system: a moisture layer that shapes autonomous movement
-* A flexible tile scoring system that supports increasingly sophisticated decision-making
-* Switchable world and environmental observation views for exploring different aspects of the simulation
+- A persistent tile-based world simulation with switchable environmental observation views
+- A flexible tile scoring system that supports increasingly sophisticated creature decision-making
+- Procedural placement of creatures and environmental resources
+- Nutrient clusters whose growth is influenced by environmental conditions
+- A persistent moisture system shaped by morning dew and evaporation
+- Tile fertility that changes over time in response to moisture and ecological activity
+- Autonomous Mosslings with energy needs, environmental preferences, and goal-directed behavior
+- Nature-inspired narration that reflects the evolving state of the ecosystem
+- A modern C++ architecture built around extensible entities and persistent environmental systems
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 While the simulation is still in its early stages, the focus has been on building a solid architectural foundation that will support richer behavior as the project grows.
