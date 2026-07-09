@@ -1,3 +1,36 @@
+## July 9, 2026
+
+Mossworld's environment is now persistent. Moisture no longer resets each day, fertility changes over time, and the world's first ecological feedback loop has begun to emerge.
+
+### What I Built
+
+- Made tile moisture persistent across days.
+- Added morning dew and evaporation as daily environmental processes.
+- Introduced tile fertility as a persistent environmental property.
+- Implemented fertility updates based on moisture conditions and nutrient activity.
+- Refined mossling movement according to moisture preferences.
+- Added moisture information to the Mossling observer HUD and made Mosslings visible in the moisture view.
+- Refactored world initialization, environmental updates, and entity placement into clearer responsibilities.
+
+### Why
+
+- Persistent environmental state allows the world to develop a history rather than resetting each day.
+- Fertility introduces the first ecological feedback loop, connecting environmental conditions to resource availability.
+- The architectural refactors separate world generation from ongoing simulation, making future environmental systems easier to integrate.
+
+### What I Learned
+
+- Not every system in a simulation should be modeled as an entity. Some concepts, like moisture and fertility, are better represented as environmental processes.
+- Configuration should describe the world, while true simulation constants belong in the code itself.
+- As environmental systems begin interacting, architectural boundaries become increasingly important. Separating environment updates, entity behavior, and initialization keeps new systems composable rather than tightly coupled.
+
+### Next
+
+- Continue expanding the ecosystem through new environmental systems and creature behaviors.
+
+
+---
+
 ## July 2, 2026
 
 Mossworld now has its first environmental system: moisture. This update also introduces observer views and a major UI refresh.
