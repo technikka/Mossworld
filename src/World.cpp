@@ -21,19 +21,17 @@ World::World(WorldConfig& config)
       view_mode(config.view_mode),
       width(config.width),
       height(config.height),
-      creature_count(config.creature_start_count),
-      nutrient_cluster_count(config.nutrient_cluster_start_count)
-
-{
+      creature_count(config.creature_start_count) {
     available_traits = mossling_traits;
 
     // prevent vector reallocation from invalidating tile occupant pointers
     creatures.reserve(config.creature_start_count);
-    nutrient_clusters.reserve(config.nutrient_cluster_start_count);
+    nutrient_clusters.reserve(config.nutrient_cluster.start_count);
 
     this->createTiles();
-    this->PlaceEntities(CREATURE);
-    this->PlaceEntities(NUTRIENT_CLUSTER);
+    this->InitializeEnvironment();
+    this->InitializeCreatures();
+    this->InitializeNutrientClusters();
 }
 
 int World::GetWidth() { return width; }
@@ -120,18 +118,69 @@ Tile* World::SelectRandomEmptyTile(int start_id, int end_id) {
     return tile;
 }
 
-// Places entity on random tile between start_id and end_id of Tile ID.
-void World::PlaceEntity(EntityType type, int start_id, int end_id) {
-    Tile* tile = SelectRandomEmptyTile(start_id, end_id);
-    Entity* entity = CreateEntity(type, tile);
-    tile->SetOccupant(entity);
+// Will only return a tile that does not have an occupant.
+Tile* World::SelectRandomFertileTile(FertilityLevel fertility_level) {
+    Tile* tile = nullptr;
+    vector<Tile*> fertile_tiles;
+
+    for (int row = 0; row < height; row++) {
+        for (int column = 0; column < width; column++) {
+            Tile& tile = tiles[row][column];
+
+            if (tile.GetFertilityLevel() == fertility_level &&
+                tile.GetOccupant() == nullptr) {
+                fertile_tiles.push_back(&tile);
+            }
+        }
+    }
+
+    if (fertile_tiles.size() != 0) {
+        int rand_index = rand() % fertile_tiles.size();
+        return fertile_tiles.at(rand_index);
+    }
+
+    return nullptr;
 }
 
-void World::PlaceEntities(EntityType entity) {
-    auto zones = GetLinearZones(GetEntityCount(entity));
+void World::PlaceEntity(EntityType type, Tile& tile) {
+    Entity* entity = CreateEntity(type, &tile);
+    tile.SetOccupant(entity);
+}
+
+// Place by zone
+void World::InitializeCreatures() {
+    auto zones = GetLinearZones(GetEntityCount(CREATURE));
 
     for (const auto& zone : zones) {
-        PlaceEntity(entity, zone.first, zone.second);
+        Tile* tile = SelectRandomEmptyTile(zone.first, zone.second);
+        if (tile == nullptr) {
+            return;
+        }
+        PlaceEntity(CREATURE, *tile);
+    }
+}
+
+void World::InitializeNutrientClusters() {
+    int count = config.nutrient_cluster.start_count;
+    for (int i = 0; i < count; i++) {
+        Tile* tile = SelectRandomFertileTile(FertilityLevel::High);
+        if (tile == nullptr) {
+            tile = SelectRandomFertileTile(FertilityLevel::Moderate);
+        }
+        if (tile == nullptr) {
+            tile = SelectRandomFertileTile(FertilityLevel::Low);
+        }
+        if (tile == nullptr) {
+            return;
+        }
+        PlaceEntity(NUTRIENT_CLUSTER, *tile);
+    }
+}
+
+void World::PlaceNutrientCluster(FertilityLevel fertility_level) {
+    Tile* tile = SelectRandomFertileTile(fertility_level);
+    if (tile != nullptr) {
+        PlaceEntity(NUTRIENT_CLUSTER, *tile);
     }
 }
 
@@ -157,7 +206,7 @@ void World::ApplyMoistureRing(Tile* tile, int amount, int distance,
                 continue;
             }
 
-            tiles[new_y][new_x].AddMoisture(spread_amount, config.max_moisture);
+            tiles[new_y][new_x].AdjustMoisture(spread_amount);
         }
     }
 }
@@ -174,13 +223,14 @@ void World::PlaceMoistureSpread(Tile* tile, int amount, int spread_distance) {
 void World::PlaceMoistureSource(int amount, int start_id, int end_id,
                                 int spread_distance) {
     Tile* tile = SelectRandomEmptyTile(start_id, end_id);
-    tile->AddMoisture(amount, config.max_moisture);
+    tile->AdjustMoisture(amount);
     PlaceMoistureSpread(tile, amount, spread_distance);
 }
 
+// Place by zone and config.source_count.
 void World::PlaceMoistureSources(int initial_amount, int sources,
                                  int spread_distance) {
-    auto zones = GetLinearZones(config.moisture_sources);
+    auto zones = GetLinearZones(config.moisture.source_count);
 
     for (const auto& zone : zones) {
         PlaceMoistureSource(initial_amount, zone.first, zone.second,
@@ -293,6 +343,7 @@ Tile* World::SelectCreatureTile(Creature& creature) {
             highest_score = tile_score.score;
         }
     }
+    return highest_scoring_tile;
 }
 
 void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
@@ -331,13 +382,27 @@ void World::MoveCreature(Creature& creature) {
 }
 
 void World::ManageNutrientClusters() {
-    // spawn a new cluster every [nutrient_spawn_interval] days
-    bool multiple_of_interval = (day % config.nutrient_spawn_interval == 0);
-    if (multiple_of_interval &&
-        nutrient_cluster_count < config.nutrient_cluster_start_count) {
-        // place on any random tile index
-        PlaceEntity(NUTRIENT_CLUSTER, 0, ((height * width)));
-        nutrient_cluster_count++;
+    int chance = rand() % 9;
+
+    bool is_high_fertility_growth_day =
+        (day % config.nutrient_cluster.high_fertility_growth_interval == 0);
+    if (is_high_fertility_growth_day) {
+        PlaceNutrientCluster(FertilityLevel::High);
+        return;
+    }
+
+    bool is_moderate_fertility_growth_day =
+        (day % config.nutrient_cluster.moderate_fertility_growth_interval == 0);
+    if (is_moderate_fertility_growth_day) {
+        PlaceNutrientCluster(FertilityLevel::Moderate);
+        return;
+    }
+
+    bool is_low_fertility_growth_day =
+        (day % config.nutrient_cluster.low_fertility_growth_interval == 0);
+    if (is_low_fertility_growth_day) {
+        PlaceNutrientCluster(FertilityLevel::Low);
+        return;
     }
 }
 
@@ -395,28 +460,90 @@ void World::AssessNeeds(Creature& creature) {
     }
 }
 
-void World::ClearMoisture() {
-    for (auto& row : tiles) {
-        for (auto& tile : row) {
-            tile.SetMoisture(0);
+void World::ApplyMorningDew() {
+    // For now, apply morning dew to new random tiles.
+    PlaceMoistureSources(config.moisture.morning_dew_amount,
+                         config.moisture.source_count,
+                         config.moisture.dew_spread_distance);
+}
+
+void World::ApplyEvaporation() {
+    for (int row = 0; row < height; row++) {
+        for (int column = 0; column < width; column++) {
+            Tile& tile = tiles[row][column];
+
+            if (tile.GetMoisture() > 0) {
+                tile.AdjustMoisture(-1);
+            }
         }
     }
 }
 
-void World::AddMorningDew() {
-    PlaceMoistureSources(config.morning_dew_moisture, config.moisture_sources,
-                         config.dew_spread_distance);
+void World::UpdateTileFertility(Tile& tile) {
+    int fertility_change = 0;
+    if (tile.HasNutrientCluster()) {
+        fertility_change -= 1;
+    }
+    MoistureLevel moisture_level = tile.GetMoistureLevel();
+    if (moisture_level == MoistureLevel::Dry ||
+        moisture_level == MoistureLevel::Saturated) {
+        fertility_change -= 1;
+    } else if (moisture_level == MoistureLevel::Ideal) {
+        fertility_change += 1;
+    }
+    tile.AdjustFertility(fertility_change);
 }
 
-void World::ApplyEnvironmentalConditions() {
-    ClearMoisture();  // reset then regenerate for now
-    AddMorningDew();
-};
+void World::UpdateFertility() {
+    for (int row = 0; row < height; row++) {
+        for (int column = 0; column < width; column++) {
+            UpdateTileFertility(tiles[row][column]);
+        }
+    }
+}
+
+void World::IntializeMoisture() {
+    PlaceMoistureSources(config.moisture.morning_dew_initial_amount,
+                         config.moisture.source_count,
+                         config.moisture.dew_spread_distance);
+}
+
+void World::InitializeTileFertility() {
+    for (int row = 0; row < height; row++) {
+        for (int column = 0; column < width; column++) {
+            Tile& tile = tiles[row][column];
+            MoistureLevel moisture = tile.GetMoistureLevel();
+
+            if (moisture == MoistureLevel::Dry ||
+                moisture == MoistureLevel::Saturated) {
+                tile.SetFertility(0);
+            } else if (moisture == MoistureLevel::Damp ||
+                       moisture == MoistureLevel::Wet) {
+                tile.SetFertility(config.fertility.initial_low);
+            } else if (moisture == MoistureLevel::Ideal) {
+                tile.SetFertility(config.fertility.initial_high);
+            }
+        }
+    }
+}
+
+void World::InitializeEnvironment() {
+    IntializeMoisture();
+    InitializeTileFertility();
+}
+
+void World::UpdateEnvironment() {
+    ApplyMorningDew();
+    ApplyEvaporation();
+    UpdateFertility();
+}
 
 void World::BeginDay() {
     day++;
     ManageNutrientClusters();
-    ApplyEnvironmentalConditions();
+    if (day != 1) {
+        UpdateEnvironment();
+    }
 }
 
 void World::RunCreatures() {
@@ -447,8 +574,9 @@ void World::PrintView() {
 void World::Observe() {
     PrintView();
     PrintStatusBar();
-    PrintEnergyBar();
+    PrintCreatureBar();
     PrintObserverMenu();
+    // PrintFertilityView();
 }
 
 void World::PrintMoistureView() {
@@ -456,7 +584,38 @@ void World::PrintMoistureView() {
     for (int row = 0; row < height; row++) {
         cout << string(config.left_margin, ' ');
         for (int column = 0; column < width; column++) {
-            cout << setw(4) << tiles[row][column].GetMoisture();
+            Tile& tile = tiles[row][column];
+            if (tile.HasCreature()) {
+                string cell = "[";
+                cell += tile.GetSymbol();
+                cell += "]";
+
+                cout << setw(4) << cell;
+                continue;
+            }
+            cout << setw(4) << tile.GetMoisture();
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+
+//! temporary
+void World::PrintFertilityView() {
+    cout << "\n" << right;  // space above world
+    for (int row = 0; row < height; row++) {
+        cout << string(config.left_margin, ' ');
+        for (int column = 0; column < width; column++) {
+            Tile& tile = tiles[row][column];
+            if (tile.HasCreature()) {
+                string cell = "[";
+                cell += tile.GetSymbol();
+                cell += "]";
+
+                cout << setw(4) << cell;
+                continue;
+            }
+            cout << setw(4) << tile.GetFertility();
         }
         cout << endl;
     }
@@ -491,6 +650,10 @@ string World::EnergyBar(int energy, int max_energy) {
     return bar;
 }
 
+string World::MoistureBar(int current, int ideal) {
+    return " Current " + to_string(current) + " |  Ideal " + to_string(ideal);
+}
+
 void World::PrintObserverMenu() const {
     cout << "\n";
     cout << "A new day is unfolding.\n\n";
@@ -509,13 +672,15 @@ void World::PrintStatusBar() const {
     cout << "\n";
 }
 
-void World::PrintEnergyBar() {
+void World::PrintCreatureBar() {
     cout << "\n";
-    cout << "──── Mossling Vitality ─────\n";
+    cout << "── Mossling Vitality ──     ── Moisture ──\n";
     for (auto& creature : creatures) {
-        cout << creature->GetTrait() << " Mossling: "
+        cout << left << setw(11) << creature->GetTrait()
              << EnergyBar(creature->GetEnergy(), creature->GetMaxEnergy())
-             << " M: " << creature->GetIdealMoisture() << endl;
+             << MoistureBar(creature->GetCurrentTile()->GetMoisture(),
+                            creature->GetIdealMoisture())
+             << endl;
     }
 }
 

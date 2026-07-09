@@ -5,6 +5,9 @@
 #include "EntityType.h"
 #include "Position.h"
 
+enum class FertilityLevel { None, Low, Moderate, High };
+enum class MoistureLevel { Dry, Damp, Ideal, Wet, Saturated };
+
 class Tile {
    public:
     Tile();
@@ -22,7 +25,12 @@ class Tile {
                                     int world_height);
     int GetMoisture() const;
     void SetMoisture(int moisture);
-    void AddMoisture(int amount, int max_moisture);
+    void AdjustMoisture(int amount);
+    void SetFertility(int fertility);
+    void AdjustFertility(int adjustment);
+    int GetFertility() const;
+    FertilityLevel GetFertilityLevel() const;
+    MoistureLevel GetMoistureLevel() const;
 
    private:
     int id;
@@ -30,6 +38,11 @@ class Tile {
     int y;
     Entity* occupant = nullptr;
     int moisture;
+    int fertility;
+    static constexpr int MinMoisture = 0;
+    static constexpr int MaxMoisture = 10;
+    static constexpr int MinFertility = 0;
+    static constexpr int MaxFertility = 10;
 };
 
 #endif

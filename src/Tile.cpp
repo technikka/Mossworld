@@ -60,8 +60,33 @@ Position Tile::IdToCoordinates(int tile_id, int world_width, int world_height) {
 
 int Tile::GetMoisture() const { return moisture; };
 
-void Tile::AddMoisture(int amount, int max_moisture) {
-    moisture = clamp(moisture + amount, 0, max_moisture);
+void Tile::AdjustMoisture(int adjustment) {
+    moisture = clamp(moisture + adjustment, MinMoisture, MaxMoisture);
 };
 
 void Tile::SetMoisture(int moisture) { this->moisture = moisture; }
+
+int Tile::GetFertility() const { return fertility; }
+
+void Tile::SetFertility(int fertility) { this->fertility = fertility; }
+
+void Tile::AdjustFertility(int adjustment) {
+    fertility = clamp(fertility + adjustment, MinFertility, MaxFertility);
+}
+
+FertilityLevel Tile::GetFertilityLevel() const {
+    if (fertility == 0) return FertilityLevel::None;
+    if (fertility <= 4) return FertilityLevel::Low;
+    if (fertility <= 7) return FertilityLevel::Moderate;
+    return FertilityLevel::High;
+}
+
+MoistureLevel Tile::GetMoistureLevel() const {
+    int moisture = GetMoisture();
+
+    if (moisture <= 2) return MoistureLevel::Dry;
+    if (moisture <= 4) return MoistureLevel::Damp;
+    if (moisture <= 6) return MoistureLevel::Ideal;
+    if (moisture <= 8) return MoistureLevel::Wet;
+    return MoistureLevel::Saturated;
+}
