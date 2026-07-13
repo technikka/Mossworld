@@ -23,7 +23,7 @@ class World {
     void BeginDay();
     void Observe();
     void RunCreatures();
-    int GetEntityCount(EntityType type);
+    int GetEntityCount(EntityType type) const;
     void SetViewMode(ViewMode mode);
     ViewMode GetViewMode(ViewMode mode);
 
@@ -42,8 +42,6 @@ class World {
     ViewMode view_mode;
     int height;
     int width;
-    int creature_count;
-    int nutrient_cluster_count;
     int next_creature_id = 1;
     int day = 1;
 

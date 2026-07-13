@@ -20,8 +20,7 @@ World::World(WorldConfig& config)
     : config(config),
       view_mode(config.view_mode),
       width(config.width),
-      height(config.height),
-      creature_count(config.creature_start_count) {
+      height(config.height) {
     available_traits = mossling_traits;
 
     // prevent vector reallocation from invalidating tile occupant pointers
@@ -37,13 +36,13 @@ World::World(WorldConfig& config)
 int World::GetWidth() { return width; }
 int World::GetHeight() { return height; }
 
-int World::GetEntityCount(EntityType type) {
+int World::GetEntityCount(EntityType type) const {
     switch (type) {
         case CREATURE:
-            return creature_count;
+            return creatures.size();
 
         case NUTRIENT_CLUSTER:
-            return nutrient_cluster_count;
+            return nutrient_clusters.size();
     }
 }
 
@@ -149,7 +148,8 @@ void World::PlaceEntity(EntityType type, Tile& tile) {
 
 // Place by zone
 void World::InitializeCreatures() {
-    auto zones = GetLinearZones(GetEntityCount(CREATURE));
+    int count = config.creature_start_count;
+    auto zones = GetLinearZones(count);
 
     for (const auto& zone : zones) {
         Tile* tile = SelectRandomEmptyTile(zone.first, zone.second);
@@ -182,6 +182,7 @@ void World::PlaceNutrientCluster(FertilityLevel fertility_level) {
     if (tile != nullptr) {
         PlaceEntity(NUTRIENT_CLUSTER, *tile);
     }
+    // todo : update nutrient_clusters count
 }
 
 void World::ApplyMoistureRing(Tile* tile, int amount, int distance,
@@ -351,7 +352,6 @@ void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
          << Narration::NutrientFound(creature.GetNutrientNeed(),
                                      creature.GetType(), creature.GetTrait());
     creature.RestoreEnergy();
-    nutrient_cluster_count -= 1;
 
     // remove nutrient cluster from its container
     auto it = find_if(nutrient_clusters.begin(), nutrient_clusters.end(),
@@ -651,7 +651,7 @@ string World::EnergyBar(int energy, int max_energy) {
 }
 
 string World::MoistureBar(int current, int ideal) {
-    return " Current " + to_string(current) + " |  Ideal " + to_string(ideal);
+    return "   ≈ " + to_string(current) + " / " + to_string(ideal);
 }
 
 void World::PrintObserverMenu() const {
@@ -666,15 +666,15 @@ void World::PrintObserverMenu() const {
 void World::PrintStatusBar() const {
     cout << "\n";
     cout << " Day: " << left << setw(5) << day << " Mosslings: " << setw(5)
-         << creature_count << " Nutrient Clusters: " << setw(5)
-         << nutrient_cluster_count << "Viewing: " << ModeToString(view_mode)
-         << "\n";
+         << GetEntityCount(CREATURE) << " Nutrient Clusters: " << setw(5)
+         << GetEntityCount(NUTRIENT_CLUSTER)
+         << "Viewing: " << ModeToString(view_mode) << "\n";
     cout << "\n";
 }
 
 void World::PrintCreatureBar() {
     cout << "\n";
-    cout << "── Mossling Vitality ──     ── Moisture ──\n";
+    cout << "   - Mosslings -          - Current / Ideal -   \n";
     for (auto& creature : creatures) {
         cout << left << setw(11) << creature->GetTrait()
              << EnergyBar(creature->GetEnergy(), creature->GetMaxEnergy())
