@@ -498,9 +498,20 @@ void World::ApplyEvaporation() {
         for (int column = 0; column < width; column++) {
             Tile& tile = tiles[row][column];
 
-            if (tile.GetMoisture() > 0) {
-                tile.AdjustMoisture(-1);
+            int evaporation = 0;
+
+            if (tile.GetSunlight() >=
+                config.sunlight.high_evaporation_threshold) {
+                evaporation += 2;
+            } else if (tile.GetSunlight() >=
+                       config.sunlight.moderate_evaporation_threshold) {
+                evaporation += 1;
+            } else if (config.sunlight.low_evaporation_threshold) {
+                if (day % 2 == 0) {  // every two days
+                    evaporation += 1;
+                };
             }
+            tile.AdjustMoisture(-evaporation);
         }
     }
 }
@@ -560,7 +571,7 @@ void World::InitializeSunlight() {
     for (const auto& zone : zones) {
         Tile* tile = SelectRandomTile(zone.first, zone.second);
         tile->SetSunlight(amount);
-        PlaceSunlightSpread(tile, amount, config.sunlight.spread_distance);
+        PlaceSunlightSpread(tile, amount - 1, config.sunlight.spread_distance);
     }
 }
 
