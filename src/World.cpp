@@ -104,6 +104,18 @@ vector<pair<int, int>> World::GetLinearZones(int zone_count) const {
     return zones;
 }
 
+// Will return a tile regardless of occupant or other effects.
+Tile* World::SelectRandomTile(int start_id, int end_id) {
+    Tile* tile = nullptr;
+    int rand_pos = rand() % (end_id - start_id);
+    int tile_id = rand_pos + start_id;
+
+    Position position = Tile::IdToCoordinates(tile_id, width, height);
+    tile = &tiles[position.y][position.x];
+
+    return tile;
+}
+
 Tile* World::SelectRandomEmptyTile(int start_id, int end_id) {
     Tile* tile = nullptr;
     do {
@@ -182,13 +194,12 @@ void World::PlaceNutrientCluster(FertilityLevel fertility_level) {
     if (tile != nullptr) {
         PlaceEntity(NUTRIENT_CLUSTER, *tile);
     }
-    // todo : update nutrient_clusters count
 }
 
-void World::ApplyMoistureRing(Tile* tile, int amount, int distance,
-                              double percent) {
+template <typename Callable>
+void World::ForEachTileInRing(Tile* tile, int spread_amount, int distance,
+                              Callable callable) {
     Position pos = tile->GetPosition();
-    int spread_amount = amount * percent;
 
     for (int y_offset = -distance; y_offset <= distance; y_offset++) {
         for (int x_offset = -distance; x_offset <= distance; x_offset++) {
@@ -207,7 +218,7 @@ void World::ApplyMoistureRing(Tile* tile, int amount, int distance,
                 continue;
             }
 
-            tiles[new_y][new_x].AdjustMoisture(spread_amount);
+            callable(tiles[new_y][new_x], spread_amount);
         }
     }
 }
@@ -216,14 +227,29 @@ void World::PlaceMoistureSpread(Tile* tile, int amount, int spread_distance) {
     // First ring of tiles gets 70% moisture.
     double percent = 0.7;
     for (int i = 1; i <= spread_distance; i++) {
-        ApplyMoistureRing(tile, amount, i, percent);
+        amount *= percent;
+        ForEachTileInRing(tile, amount, i,
+                          [](Tile& ring_tile, int spread_amount) {
+                              ring_tile.AdjustMoisture(spread_amount);
+                          });
         percent *= 0.5;
+    }
+}
+
+void World::PlaceSunlightSpread(Tile* tile, int amount, int spread_distance) {
+    // Each ring gets 1 less intensity
+    for (int i = 1; i <= spread_distance; i++) {
+        ForEachTileInRing(tile, amount, i,
+                          [](Tile& ring_tile, int spread_amount) {
+                              ring_tile.SetSunlightIfGreater(spread_amount);
+                          });
+        amount -= 1;
     }
 }
 
 void World::PlaceMoistureSource(int amount, int start_id, int end_id,
                                 int spread_distance) {
-    Tile* tile = SelectRandomEmptyTile(start_id, end_id);
+    Tile* tile = SelectRandomTile(start_id, end_id);
     tile->AdjustMoisture(amount);
     PlaceMoistureSpread(tile, amount, spread_distance);
 }
@@ -527,7 +553,19 @@ void World::InitializeTileFertility() {
     }
 }
 
+void World::InitializeSunlight() {
+    auto zones = GetLinearZones(config.sunlight.source_count);
+
+    int amount = config.sunlight.initial_intensity;
+    for (const auto& zone : zones) {
+        Tile* tile = SelectRandomTile(zone.first, zone.second);
+        tile->SetSunlight(amount);
+        PlaceSunlightSpread(tile, amount, config.sunlight.spread_distance);
+    }
+}
+
 void World::InitializeEnvironment() {
+    InitializeSunlight();
     IntializeMoisture();
     InitializeTileFertility();
 }
@@ -577,6 +615,7 @@ void World::Observe() {
     PrintCreatureBar();
     PrintObserverMenu();
     // PrintFertilityView();
+    PrintSunlightView();
 }
 
 void World::PrintMoistureView() {
@@ -616,6 +655,28 @@ void World::PrintFertilityView() {
                 continue;
             }
             cout << setw(4) << tile.GetFertility();
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+
+//! temporary
+void World::PrintSunlightView() {
+    cout << "\n" << right;  // space above world
+    for (int row = 0; row < height; row++) {
+        cout << string(config.left_margin, ' ');
+        for (int column = 0; column < width; column++) {
+            Tile& tile = tiles[row][column];
+            if (tile.HasCreature()) {
+                string cell = "[";
+                cell += tile.GetSymbol();
+                cell += "]";
+
+                cout << setw(4) << cell;
+                continue;
+            }
+            cout << setw(4) << tile.GetSunlight();
         }
         cout << endl;
     }

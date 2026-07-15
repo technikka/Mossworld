@@ -20,10 +20,10 @@ class World {
     void PrintCreatureBar();
     void PrintObserverMenu() const;
     void PrintFertilityView();
+    void PrintSunlightView();
     void BeginDay();
     void Observe();
     void RunCreatures();
-    int GetEntityCount(EntityType type) const;
     void SetViewMode(ViewMode mode);
     ViewMode GetViewMode(ViewMode mode);
 
@@ -45,6 +45,7 @@ class World {
     int next_creature_id = 1;
     int day = 1;
 
+    int GetEntityCount(EntityType type) const;
     void createTiles();
     void PlaceEntity(EntityType entity, Tile& tile);
     void PlaceNutrientCluster(FertilityLevel fertility_level);
@@ -68,6 +69,7 @@ class World {
     void InitializeEnvironment();
     void IntializeMoisture();
     void InitializeTileFertility();
+    void InitializeSunlight();
     void ApplyMorningDew();
     void ApplyEvaporation();
     void PlaceMoistureSources(int initial_amount, int sources,
@@ -75,8 +77,14 @@ class World {
     void PlaceMoistureSource(int amount, int start_id, int end_id,
                              int spread_distance);
     void PlaceMoistureSpread(Tile* tile, int amount, int spread_distance);
-    void ApplyMoistureRing(Tile* tile, int amount, int radius, double percent);
+    void PlaceSunlightSpread(Tile* tile, int amount, int spread_distance);
+
+    template <typename Callable>
+    void ForEachTileInRing(Tile* tile, int spread_amount, int distance,
+                           Callable callable);
+
     Tile* SelectRandomEmptyTile(int start_id, int end_id);
+    Tile* SelectRandomTile(int start_id, int end_id);
     Tile* SelectRandomFertileTile(FertilityLevel fertility_level);
     string EnergyBar(int energy, int max_energy);
     string MoistureBar(int current, int ideal);

@@ -30,9 +30,16 @@ struct WorldConfig {
         int dew_spread_distance = 2;
     };
 
+    struct Sunlight {
+        int initial_intensity = 5;
+        int source_count = 3;
+        int spread_distance = 4;
+    };
+
     NutrientCluster nutrient_cluster;
     Moisture moisture;
     Fertility fertility;
+    Sunlight sunlight;
 
     // * Creature
     int creature_start_count = 4;

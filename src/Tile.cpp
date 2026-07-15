@@ -74,6 +74,16 @@ void Tile::AdjustFertility(int adjustment) {
     fertility = clamp(fertility + adjustment, MinFertility, MaxFertility);
 }
 
+void Tile::SetSunlight(int sunlight) { this->sunlight = sunlight; }
+
+int Tile::GetSunlight() const { return sunlight; }
+
+void Tile::SetSunlightIfGreater(int amount) {
+    if (amount > sunlight) {
+        sunlight = amount;
+    }
+}
+
 FertilityLevel Tile::GetFertilityLevel() const {
     if (fertility == 0) return FertilityLevel::None;
     if (fertility <= 4) return FertilityLevel::Low;

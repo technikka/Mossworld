@@ -26,9 +26,12 @@ class Tile {
     int GetMoisture() const;
     void SetMoisture(int moisture);
     void AdjustMoisture(int amount);
+    int GetFertility() const;
     void SetFertility(int fertility);
     void AdjustFertility(int adjustment);
-    int GetFertility() const;
+    int GetSunlight() const;
+    void SetSunlight(int sunlight);
+    void SetSunlightIfGreater(int amount);
     FertilityLevel GetFertilityLevel() const;
     MoistureLevel GetMoistureLevel() const;
 
@@ -37,12 +40,15 @@ class Tile {
     int x;
     int y;
     Entity* occupant = nullptr;
-    int moisture;
-    int fertility;
+    int moisture = 0;
+    int fertility = 0;
+    int sunlight = 0;
     static constexpr int MinMoisture = 0;
     static constexpr int MaxMoisture = 10;
     static constexpr int MinFertility = 0;
     static constexpr int MaxFertility = 10;
+    static constexpr int MinSunlight = 0;
+    static constexpr int MaxSunlight = 10;
 };
 
 #endif
