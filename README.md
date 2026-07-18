@@ -41,15 +41,17 @@ I expect Mossworld to remain a long-term project, growing alongside my understan
 
 Mossworld is in active development and currently includes:
 
-- A persistent tile-based world simulation with switchable environmental observation views
-- A flexible tile scoring system that supports increasingly sophisticated creature decision-making
-- Procedural placement of creatures and environmental resources
-- Nutrient clusters whose growth is influenced by environmental conditions
-- A persistent moisture system shaped by morning dew and evaporation
-- Tile fertility that changes over time in response to moisture and ecological activity
-- Autonomous Mosslings with energy needs, environmental preferences, and goal-directed behavior
-- Nature-inspired narration that reflects the evolving state of the ecosystem
-- A modern C++ architecture built around extensible entities and persistent environmental systems
+* A persistent tile-based world simulation with switchable environmental observation views
+* A flexible tile scoring system that supports increasingly sophisticated creature decision-making
+* Procedural placement of creatures and environmental resources
+* Tile-based nutrient growth where local environmental conditions shape accumulated growth progress
+* A persistent moisture system shaped by morning dew and sunlight-driven evaporation
+* A sunlight system that forms natural gradients across the world and interacts with other environmental systems
+* Tile fertility that changes over time in response to moisture and ecological activity
+* Autonomous Mosslings with energy needs, environmental preferences, and goal-directed behavior
+* Nature-inspired narration that reflects the evolving state of the ecosystem
+* A modern C++ architecture built around extensible entities and persistent environmental systems
+
 
 
 
