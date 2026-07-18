@@ -61,7 +61,7 @@ Position Tile::IdToCoordinates(int tile_id, int world_width, int world_height) {
 int Tile::GetMoisture() const { return moisture; };
 
 void Tile::AdjustMoisture(int adjustment) {
-    moisture = clamp(moisture + adjustment, MinMoisture, MaxMoisture);
+    moisture = clamp(moisture + adjustment, min_moisture, max_moisture);
 };
 
 void Tile::SetMoisture(int moisture) { this->moisture = moisture; }
@@ -71,7 +71,7 @@ int Tile::GetFertility() const { return fertility; }
 void Tile::SetFertility(int fertility) { this->fertility = fertility; }
 
 void Tile::AdjustFertility(int adjustment) {
-    fertility = clamp(fertility + adjustment, MinFertility, MaxFertility);
+    fertility = clamp(fertility + adjustment, min_fertility, max_fertility);
 }
 
 void Tile::SetSunlight(int sunlight) { this->sunlight = sunlight; }
@@ -92,11 +92,32 @@ FertilityLevel Tile::GetFertilityLevel() const {
 }
 
 MoistureLevel Tile::GetMoistureLevel() const {
-    int moisture = GetMoisture();
-
     if (moisture <= 2) return MoistureLevel::Dry;
     if (moisture <= 4) return MoistureLevel::Damp;
     if (moisture <= 6) return MoistureLevel::Ideal;
     if (moisture <= 8) return MoistureLevel::Wet;
     return MoistureLevel::Saturated;
+}
+
+SunlightLevel Tile::GetSunlightLevel() const {
+    if (sunlight <= 2) return SunlightLevel::Dark;
+    if (sunlight <= 4) return SunlightLevel::Low;
+    if (sunlight <= 6) return SunlightLevel::Moderate;
+    return SunlightLevel::Bright;
+}
+
+int Tile::GetNutrientGrowthProgress() const { return nutrient_growth_progress; }
+
+void Tile::AdjustNutrientGrowthProgress(int adjustment) {
+    nutrient_growth_progress =
+        clamp(nutrient_growth_progress + adjustment,
+              nutrient_growth_progress_floor, nutrient_growth_progress_ceiling);
+}
+
+void Tile::ResetNutrientGrowthProgress() {
+    nutrient_growth_progress = nutrient_growth_progress_floor;
+}
+
+bool Tile::CanGrowNutrient() {
+    return nutrient_growth_progress >= nutrient_growth_progress_ceiling;
 }

@@ -19,8 +19,7 @@ class World {
     void PrintStatusBar() const;
     void PrintCreatureBar();
     void PrintObserverMenu() const;
-    void PrintFertilityView();
-    void PrintSunlightView();
+    void PrintTestView();
     void BeginDay();
     void Observe();
     void RunCreatures();
@@ -48,7 +47,7 @@ class World {
     int GetEntityCount(EntityType type) const;
     void createTiles();
     void PlaceEntity(EntityType entity, Tile& tile);
-    void PlaceNutrientCluster(FertilityLevel fertility_level);
+    void PlaceNutrientCluster(Tile& tile);
     void InitializeNutrientClusters();
     void InitializeCreatures();
     Entity* CreateEntity(EntityType type, Tile* tile);
@@ -58,6 +57,10 @@ class World {
     void MoveCreature(Creature& creature);
     std::string GetTrait();
     void ManageNutrientClusters();
+    int CalculateNutrientGrowth(const Tile& tile);
+    int CalculateFertilityGrowthModifier(const Tile& tile);
+    int CalculateMoistureGrowthModifier(const Tile& tile);
+    int CalculateSunlightGrowthModifier(const Tile& tile);
     void HandleNutrientConsumption(Creature& creature, Tile* tile);
     void AssessNeeds(Creature& creature);
     void SelectNutrientObjective(Creature& creature, int max_energy);
@@ -85,7 +88,7 @@ class World {
 
     Tile* SelectRandomEmptyTile(int start_id, int end_id);
     Tile* SelectRandomTile(int start_id, int end_id);
-    Tile* SelectRandomFertileTile(FertilityLevel fertility_level);
+    Tile* SelectRandomNutrientGrowthTile();
     string EnergyBar(int energy, int max_energy);
     string MoistureBar(int current, int ideal);
     int ScoreTile(Tile& tile, Creature& creature);

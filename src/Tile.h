@@ -7,6 +7,7 @@
 
 enum class FertilityLevel { None, Low, Moderate, High };
 enum class MoistureLevel { Dry, Damp, Ideal, Wet, Saturated };
+enum class SunlightLevel { Dark, Low, Moderate, Bright };
 
 class Tile {
    public:
@@ -32,8 +33,13 @@ class Tile {
     int GetSunlight() const;
     void SetSunlight(int sunlight);
     void SetSunlightIfGreater(int amount);
+    SunlightLevel GetSunlightLevel() const;
     FertilityLevel GetFertilityLevel() const;
     MoistureLevel GetMoistureLevel() const;
+    int GetNutrientGrowthProgress() const;
+    void AdjustNutrientGrowthProgress(int adjustment);
+    void ResetNutrientGrowthProgress();
+    bool CanGrowNutrient();
 
    private:
     int id;
@@ -43,12 +49,15 @@ class Tile {
     int moisture = 0;
     int fertility = 0;
     int sunlight = 0;
-    static constexpr int MinMoisture = 0;
-    static constexpr int MaxMoisture = 10;
-    static constexpr int MinFertility = 0;
-    static constexpr int MaxFertility = 10;
-    static constexpr int MinSunlight = 0;
-    static constexpr int MaxSunlight = 10;
+    int nutrient_growth_progress = 0;
+    static constexpr int min_moisture = 0;
+    static constexpr int max_moisture = 10;
+    static constexpr int min_fertility = 0;
+    static constexpr int max_fertility = 10;
+    static constexpr int min_sunlight = 0;
+    static constexpr int max_sunlight = 10;
+    static constexpr int nutrient_growth_progress_floor = 0;
+    static constexpr int nutrient_growth_progress_ceiling = 40;
 };
 
 #endif

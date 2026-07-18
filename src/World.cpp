@@ -129,25 +129,32 @@ Tile* World::SelectRandomEmptyTile(int start_id, int end_id) {
     return tile;
 }
 
-// Will only return a tile that does not have an occupant.
-Tile* World::SelectRandomFertileTile(FertilityLevel fertility_level) {
-    Tile* tile = nullptr;
-    vector<Tile*> fertile_tiles;
+Tile* World::SelectRandomNutrientGrowthTile() {
+    vector<Tile*> growth_tiles;
+    int highest_growth = numeric_limits<int>::min();
 
     for (int row = 0; row < height; row++) {
         for (int column = 0; column < width; column++) {
             Tile& tile = tiles[row][column];
 
-            if (tile.GetFertilityLevel() == fertility_level &&
-                tile.GetOccupant() == nullptr) {
-                fertile_tiles.push_back(&tile);
+            if (!tile.IsEmpty()) {
+                continue;
+            }
+            int growth = CalculateNutrientGrowth(tile);
+
+            if (growth > highest_growth) {
+                highest_growth = growth;
+                growth_tiles.clear();
+                growth_tiles.push_back(&tile);
+            } else if (growth == highest_growth) {
+                growth_tiles.push_back(&tile);
             }
         }
     }
 
-    if (fertile_tiles.size() != 0) {
-        int rand_index = rand() % fertile_tiles.size();
-        return fertile_tiles.at(rand_index);
+    if (growth_tiles.size() != 0) {
+        int rand_index = rand() % growth_tiles.size();
+        return growth_tiles.at(rand_index);
     }
 
     return nullptr;
@@ -175,25 +182,17 @@ void World::InitializeCreatures() {
 void World::InitializeNutrientClusters() {
     int count = config.nutrient_cluster.start_count;
     for (int i = 0; i < count; i++) {
-        Tile* tile = SelectRandomFertileTile(FertilityLevel::High);
-        if (tile == nullptr) {
-            tile = SelectRandomFertileTile(FertilityLevel::Moderate);
-        }
-        if (tile == nullptr) {
-            tile = SelectRandomFertileTile(FertilityLevel::Low);
-        }
+        Tile* tile = SelectRandomNutrientGrowthTile();
         if (tile == nullptr) {
             return;
         }
+
         PlaceEntity(NUTRIENT_CLUSTER, *tile);
     }
 }
 
-void World::PlaceNutrientCluster(FertilityLevel fertility_level) {
-    Tile* tile = SelectRandomFertileTile(fertility_level);
-    if (tile != nullptr) {
-        PlaceEntity(NUTRIENT_CLUSTER, *tile);
-    }
+void World::PlaceNutrientCluster(Tile& tile) {
+    PlaceEntity(NUTRIENT_CLUSTER, tile);
 }
 
 template <typename Callable>
@@ -407,28 +406,80 @@ void World::MoveCreature(Creature& creature) {
     new_tile->SetOccupant(&creature);
 }
 
+int World::CalculateFertilityGrowthModifier(const Tile& tile) {
+    int growth = 0;
+    FertilityLevel fertility_level = tile.GetFertilityLevel();
+
+    if (fertility_level == FertilityLevel::High) {
+        growth += config.nutrient_growth.high_fertility_modifier;
+    } else if (fertility_level == FertilityLevel::Moderate) {
+        growth += config.nutrient_growth.moderate_fertility_modifier;
+    } else if (fertility_level == FertilityLevel::Low) {
+        growth += config.nutrient_growth.low_fertility_modifier;
+    }
+    return growth;
+}
+
+int World::CalculateMoistureGrowthModifier(const Tile& tile) {
+    int growth = 0;
+    MoistureLevel moisture_level = tile.GetMoistureLevel();
+
+    if (moisture_level == MoistureLevel::Saturated) {
+        growth += config.nutrient_growth.saturated_moisture_modifier;
+    } else if (moisture_level == MoistureLevel::Wet) {
+        growth += config.nutrient_growth.wet_moisture_modifier;
+    } else if (moisture_level == MoistureLevel::Ideal) {
+        growth += config.nutrient_growth.ideal_moisture_modifier;
+    } else if (moisture_level == MoistureLevel::Damp) {
+        growth += config.nutrient_growth.damp_moisture_modifier;
+    } else if (moisture_level == MoistureLevel::Dry) {
+        growth += config.nutrient_growth.dry_moisture_modifier;
+    }
+    return growth;
+}
+
+int World::CalculateSunlightGrowthModifier(const Tile& tile) {
+    int growth = 0;
+    SunlightLevel sunlight_level = tile.GetSunlightLevel();
+
+    if (sunlight_level == SunlightLevel::Bright) {
+        growth += config.nutrient_growth.bright_sunlight_modifier;
+    } else if (sunlight_level == SunlightLevel::Moderate) {
+        growth += config.nutrient_growth.moderate_sunlight_modifier;
+    } else if (sunlight_level == SunlightLevel::Low) {
+        growth += config.nutrient_growth.low_sunlight_modifier;
+    } else if (sunlight_level == SunlightLevel::Dark) {
+        growth += config.nutrient_growth.dark_sunlight_modifier;
+    }
+    return growth;
+}
+
+int World::CalculateNutrientGrowth(const Tile& tile) {
+    int growth = 0;
+
+    growth += CalculateFertilityGrowthModifier(tile);
+    growth += CalculateMoistureGrowthModifier(tile);
+    growth += CalculateSunlightGrowthModifier(tile);
+
+    return growth;
+}
+
+// HandleNutrientGrowth
 void World::ManageNutrientClusters() {
-    int chance = rand() % 9;
+    for (int row = 0; row < height; row++) {
+        for (int column = 0; column < width; column++) {
+            Tile& tile = tiles[row][column];
 
-    bool is_high_fertility_growth_day =
-        (day % config.nutrient_cluster.high_fertility_growth_interval == 0);
-    if (is_high_fertility_growth_day) {
-        PlaceNutrientCluster(FertilityLevel::High);
-        return;
-    }
+            if (tile.HasNutrientCluster()) {
+                continue;
+            }
+            tile.AdjustNutrientGrowthProgress(CalculateNutrientGrowth(tile));
 
-    bool is_moderate_fertility_growth_day =
-        (day % config.nutrient_cluster.moderate_fertility_growth_interval == 0);
-    if (is_moderate_fertility_growth_day) {
-        PlaceNutrientCluster(FertilityLevel::Moderate);
-        return;
-    }
-
-    bool is_low_fertility_growth_day =
-        (day % config.nutrient_cluster.low_fertility_growth_interval == 0);
-    if (is_low_fertility_growth_day) {
-        PlaceNutrientCluster(FertilityLevel::Low);
-        return;
+            if (tile.CanGrowNutrient() && tile.IsEmpty()) {
+                PlaceNutrientCluster(tile);
+                tile.ResetNutrientGrowthProgress();
+            }
+        }
     }
 }
 
@@ -497,18 +548,17 @@ void World::ApplyEvaporation() {
     for (int row = 0; row < height; row++) {
         for (int column = 0; column < width; column++) {
             Tile& tile = tiles[row][column];
-
             int evaporation = 0;
 
             if (tile.GetSunlight() >=
                 config.sunlight.high_evaporation_threshold) {
-                evaporation += 2;
+                evaporation += config.sunlight.high_evaporation_modifier;
             } else if (tile.GetSunlight() >=
                        config.sunlight.moderate_evaporation_threshold) {
-                evaporation += 1;
+                evaporation += config.sunlight.moderate_evaporation_modifier;
             } else if (config.sunlight.low_evaporation_threshold) {
-                if (day % 2 == 0) {  // every two days
-                    evaporation += 1;
+                if (day % config.sunlight.low_evaporation_interal == 0) {
+                    evaporation += config.sunlight.low_evaporation_modifier;
                 };
             }
             tile.AdjustMoisture(-evaporation);
@@ -518,15 +568,19 @@ void World::ApplyEvaporation() {
 
 void World::UpdateTileFertility(Tile& tile) {
     int fertility_change = 0;
+
     if (tile.HasNutrientCluster()) {
-        fertility_change -= 1;
+        fertility_change += config.fertility.nutrient_depletion_modifier;
     }
+
     MoistureLevel moisture_level = tile.GetMoistureLevel();
-    if (moisture_level == MoistureLevel::Dry ||
-        moisture_level == MoistureLevel::Saturated) {
-        fertility_change -= 1;
+
+    if (moisture_level == MoistureLevel::Dry) {
+        fertility_change += config.fertility.dry_moisture_modifier;
+    } else if (moisture_level == MoistureLevel::Saturated) {
+        fertility_change += config.fertility.saturated_moisture_modifier;
     } else if (moisture_level == MoistureLevel::Ideal) {
-        fertility_change += 1;
+        fertility_change += config.fertility.ideal_moisture_modifier;
     }
     tile.AdjustFertility(fertility_change);
 }
@@ -625,8 +679,6 @@ void World::Observe() {
     PrintStatusBar();
     PrintCreatureBar();
     PrintObserverMenu();
-    // PrintFertilityView();
-    PrintSunlightView();
 }
 
 void World::PrintMoistureView() {
@@ -650,44 +702,23 @@ void World::PrintMoistureView() {
     cout << endl;
 }
 
-//! temporary
-void World::PrintFertilityView() {
-    cout << "\n" << right;  // space above world
+// Use for current implementation testing.
+void World::PrintTestView() {
+    cout << "\n" << right;
     for (int row = 0; row < height; row++) {
         cout << string(config.left_margin, ' ');
         for (int column = 0; column < width; column++) {
             Tile& tile = tiles[row][column];
-            if (tile.HasCreature()) {
-                string cell = "[";
-                cell += tile.GetSymbol();
-                cell += "]";
+            // print creature:
+            // if (tile.HasCreature()) {
+            //     string cell = "[";
+            //     cell += tile.GetSymbol();
+            //     cell += "]";
 
-                cout << setw(4) << cell;
-                continue;
-            }
-            cout << setw(4) << tile.GetFertility();
-        }
-        cout << endl;
-    }
-    cout << endl;
-}
-
-//! temporary
-void World::PrintSunlightView() {
-    cout << "\n" << right;  // space above world
-    for (int row = 0; row < height; row++) {
-        cout << string(config.left_margin, ' ');
-        for (int column = 0; column < width; column++) {
-            Tile& tile = tiles[row][column];
-            if (tile.HasCreature()) {
-                string cell = "[";
-                cell += tile.GetSymbol();
-                cell += "]";
-
-                cout << setw(4) << cell;
-                continue;
-            }
-            cout << setw(4) << tile.GetSunlight();
+            //     cout << setw(4) << cell;
+            //     continue;
+            // }
+            cout << setw(4) << tile.GetNutrientGrowthProgress();
         }
         cout << endl;
     }
