@@ -89,6 +89,22 @@ void World::RemoveEntity(EntityType type, Tile* tile) {
     }
 };
 
+template <typename Callable>
+void World::ForEachTile(Callable callable) {
+    for (int row = 0; row < height; row++) {
+        for (int column = 0; column < width; column++) {
+            callable(tiles[row][column]);
+        }
+    }
+}
+
+template <typename Callable>
+void World::ForEachTileWithPosition(Callable callable) {
+    for (int row = 0; row < height; ++row)
+        for (int column = 0; column < width; ++column)
+            callable(tiles[row][column], Position{row, column});
+}
+
 vector<pair<int, int>> World::GetLinearZones(int zone_count) const {
     vector<pair<int, int>> zones;
 
@@ -133,24 +149,20 @@ Tile* World::SelectRandomNutrientGrowthTile() {
     vector<Tile*> growth_tiles;
     int highest_growth = numeric_limits<int>::min();
 
-    for (int row = 0; row < height; row++) {
-        for (int column = 0; column < width; column++) {
-            Tile& tile = tiles[row][column];
-
-            if (!tile.IsEmpty()) {
-                continue;
-            }
-            int growth = CalculateNutrientGrowth(tile);
-
-            if (growth > highest_growth) {
-                highest_growth = growth;
-                growth_tiles.clear();
-                growth_tiles.push_back(&tile);
-            } else if (growth == highest_growth) {
-                growth_tiles.push_back(&tile);
-            }
+    ForEachTile([&](Tile& tile) {
+        if (!tile.IsEmpty()) {
+            return;
         }
-    }
+        int growth = CalculateNutrientGrowth(tile);
+
+        if (growth > highest_growth) {
+            highest_growth = growth;
+            growth_tiles.clear();
+            growth_tiles.push_back(&tile);
+        } else if (growth == highest_growth) {
+            growth_tiles.push_back(&tile);
+        }
+    });
 
     if (growth_tiles.size() != 0) {
         int rand_index = rand() % growth_tiles.size();
@@ -466,21 +478,17 @@ int World::CalculateNutrientGrowth(const Tile& tile) {
 
 // HandleNutrientGrowth
 void World::ManageNutrientClusters() {
-    for (int row = 0; row < height; row++) {
-        for (int column = 0; column < width; column++) {
-            Tile& tile = tiles[row][column];
-
-            if (tile.HasNutrientCluster()) {
-                continue;
-            }
-            tile.AdjustNutrientGrowthProgress(CalculateNutrientGrowth(tile));
-
-            if (tile.CanGrowNutrient() && tile.IsEmpty()) {
-                PlaceNutrientCluster(tile);
-                tile.ResetNutrientGrowthProgress();
-            }
+    ForEachTile([this](Tile& tile) {
+        if (tile.HasNutrientCluster()) {
+            return;
         }
-    }
+        tile.AdjustNutrientGrowthProgress(CalculateNutrientGrowth(tile));
+
+        if (tile.CanGrowNutrient() && tile.IsEmpty()) {
+            PlaceNutrientCluster(tile);
+            tile.ResetNutrientGrowthProgress();
+        }
+    });
 }
 
 Tile* World::FindNearestNutrientCluster(Creature& creature) {
@@ -545,25 +553,21 @@ void World::ApplyMorningDew() {
 }
 
 void World::ApplyEvaporation() {
-    for (int row = 0; row < height; row++) {
-        for (int column = 0; column < width; column++) {
-            Tile& tile = tiles[row][column];
-            int evaporation = 0;
+    ForEachTile([this](Tile& tile) {
+        int evaporation = 0;
 
-            if (tile.GetSunlight() >=
-                config.sunlight.high_evaporation_threshold) {
-                evaporation += config.sunlight.high_evaporation_modifier;
-            } else if (tile.GetSunlight() >=
-                       config.sunlight.moderate_evaporation_threshold) {
-                evaporation += config.sunlight.moderate_evaporation_modifier;
-            } else if (config.sunlight.low_evaporation_threshold) {
-                if (day % config.sunlight.low_evaporation_interal == 0) {
-                    evaporation += config.sunlight.low_evaporation_modifier;
-                };
-            }
-            tile.AdjustMoisture(-evaporation);
+        if (tile.GetSunlight() >= config.sunlight.high_evaporation_threshold) {
+            evaporation += config.sunlight.high_evaporation_modifier;
+        } else if (tile.GetSunlight() >=
+                   config.sunlight.moderate_evaporation_threshold) {
+            evaporation += config.sunlight.moderate_evaporation_modifier;
+        } else if (config.sunlight.low_evaporation_threshold) {
+            if (day % config.sunlight.low_evaporation_interal == 0) {
+                evaporation += config.sunlight.low_evaporation_modifier;
+            };
         }
-    }
+        tile.AdjustMoisture(-evaporation);
+    });
 }
 
 void World::UpdateTileFertility(Tile& tile) {
@@ -586,11 +590,7 @@ void World::UpdateTileFertility(Tile& tile) {
 }
 
 void World::UpdateFertility() {
-    for (int row = 0; row < height; row++) {
-        for (int column = 0; column < width; column++) {
-            UpdateTileFertility(tiles[row][column]);
-        }
-    }
+    ForEachTile([this](Tile& tile) { UpdateTileFertility(tile); });
 }
 
 void World::IntializeMoisture() {
@@ -600,22 +600,19 @@ void World::IntializeMoisture() {
 }
 
 void World::InitializeTileFertility() {
-    for (int row = 0; row < height; row++) {
-        for (int column = 0; column < width; column++) {
-            Tile& tile = tiles[row][column];
-            MoistureLevel moisture = tile.GetMoistureLevel();
+    ForEachTile([this](Tile& tile) {
+        MoistureLevel moisture = tile.GetMoistureLevel();
 
-            if (moisture == MoistureLevel::Dry ||
-                moisture == MoistureLevel::Saturated) {
-                tile.SetFertility(0);
-            } else if (moisture == MoistureLevel::Damp ||
-                       moisture == MoistureLevel::Wet) {
-                tile.SetFertility(config.fertility.initial_low);
-            } else if (moisture == MoistureLevel::Ideal) {
-                tile.SetFertility(config.fertility.initial_high);
-            }
+        if (moisture == MoistureLevel::Dry ||
+            moisture == MoistureLevel::Saturated) {
+            tile.SetFertility(0);
+        } else if (moisture == MoistureLevel::Damp ||
+                   moisture == MoistureLevel::Wet) {
+            tile.SetFertility(config.fertility.initial_low);
+        } else if (moisture == MoistureLevel::Ideal) {
+            tile.SetFertility(config.fertility.initial_high);
         }
-    }
+    });
 }
 
 void World::InitializeSunlight() {
@@ -735,9 +732,8 @@ string World::MoistureBar(int current, int ideal) {
 void World::PrintObserverMenu() const {
     cout << "\n";
     cout << "A new day is unfolding.\n\n";
-    // ⬚ ▦ ⌂ ⊞
     cout << "Observe ➜ Enter   Leave ➜ 'exit'\n";
-    cout << "View ➜ 1: ⌂ 2: ≈  3: ☀" << endl;
+    cout << "Change View ➜ 1: ⌂ 2: ≈  3: ☀" << endl;
     cout << "❯ ";
 }
 

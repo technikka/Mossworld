@@ -45,6 +45,11 @@ class World {
     int next_creature_id = 1;
     int day = 1;
 
+    template <typename Callable>
+    void ForEachTile(Callable callable);
+    template <typename Callable>
+    void ForEachTileWithPosition(Callable callable);
+
     int GetEntityCount(EntityType type) const;
     void createTiles();
     void PlaceEntity(EntityType entity, Tile& tile);
