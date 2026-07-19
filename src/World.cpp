@@ -332,6 +332,13 @@ int World::ScoreMoisture(Tile& tile, Creature& creature) {
     return 10 - moisture_difference;
 }
 
+int World::ScoreSunlight(Tile& tile, Creature& creature) {
+    int sunlight_difference =
+        abs(tile.GetSunlight() - creature.GetIdealSunlight());
+
+    return 10 - sunlight_difference;
+}
+
 int World::ScoreBacktracking(Tile& tile, Creature& creature) {
     Tile* previous_tile =
         creature.tile_history.at(creature.tile_history.size() - 2);
@@ -351,6 +358,7 @@ int World::ScoreTile(Tile& tile, Creature& creature) {
     }
 
     score += ScoreMoisture(tile, creature);
+    score += ScoreSunlight(tile, creature);
 
     if (creature.tile_history.size() > 1) {
         score += ScoreBacktracking(tile, creature);
@@ -726,8 +734,13 @@ string World::EnergyBar(int energy, int max_energy) {
     return bar;
 }
 
-string World::MoistureBar(int current, int ideal) {
-    return "   ≈ " + to_string(current) + " / " + to_string(ideal);
+string World::PreferenceBar(Creature& creature) {
+    Tile& tile = *creature.GetCurrentTile();
+
+    return "   ≈ " + to_string(tile.GetMoisture()) + " / " +
+           to_string(creature.GetIdealMoisture()) + "   ☀ " +
+           to_string(tile.GetSunlight()) + " / " +
+           to_string(creature.GetIdealSunlight());
 }
 
 void World::PrintObserverMenu() const {
@@ -753,9 +766,7 @@ void World::PrintCreatureBar() {
     for (auto& creature : creatures) {
         cout << left << setw(11) << creature->GetTrait()
              << EnergyBar(creature->GetEnergy(), creature->GetMaxEnergy())
-             << MoistureBar(creature->GetCurrentTile()->GetMoisture(),
-                            creature->GetIdealMoisture())
-             << endl;
+             << PreferenceBar(*creature) << endl;
     }
 }
 

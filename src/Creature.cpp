@@ -75,3 +75,5 @@ bool Creature::HasObjective() const {
 }
 
 int Creature::GetIdealMoisture() { return ideal_moisture; }
+
+int Creature::GetIdealSunlight() { return ideal_sunlight; }

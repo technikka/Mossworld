@@ -31,6 +31,7 @@ class Creature : public Entity {
     int GetEnergy() const;
     NutrientNeed GetNutrientNeed() const;
     int GetIdealMoisture();
+    int GetIdealSunlight();
 
     // * Setters
     void SetObjective(Tile* tile);

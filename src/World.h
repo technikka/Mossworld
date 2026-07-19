@@ -96,10 +96,11 @@ class World {
     Tile* SelectRandomTile(int start_id, int end_id);
     Tile* SelectRandomNutrientGrowthTile();
     string EnergyBar(int energy, int max_energy);
-    string MoistureBar(int current, int ideal);
+    string PreferenceBar(Creature& creature);
     int ScoreTile(Tile& tile, Creature& creature);
     int ScoreObjective(Tile& tile, Creature& creature);
     int ScoreMoisture(Tile& tile, Creature& creature);
+    int ScoreSunlight(Tile& tile, Creature& creature);
     int ScoreBacktracking(Tile& tile, Creature& creature);
 };
 
