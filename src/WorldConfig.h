@@ -10,11 +10,20 @@ struct WorldConfig {
     int width = 9;
     int height = 9;
 
+    struct Creature {
+        int max_energy = 10;
+        int start_count = 4;
+        int initial_energy = 10;
+    };
+
     struct NutrientCluster {
         int start_count = 8;
     };
 
     struct NutrientGrowth {
+        int progress_floor = 0;
+        int progress_ceiling = 40;
+
         int high_fertility_modifier = 3;
         int moderate_fertility_modifier = 2;
         int low_fertility_modifier = 1;
@@ -32,6 +41,8 @@ struct WorldConfig {
     };
 
     struct Fertility {
+        int min = 0;
+        int max = 10;
         int initial_low = 3;
         int initial_high = 9;
 
@@ -43,6 +54,8 @@ struct WorldConfig {
     };
 
     struct Moisture {
+        int min = 0;
+        int max = 10;
         int source_count = 3;
         int morning_dew_initial_amount = 5;
         int morning_dew_amount = 3;
@@ -50,6 +63,8 @@ struct WorldConfig {
     };
 
     struct Sunlight {
+        int min = 0;
+        int max = 10;
         int initial_intensity = 6;
         int source_count = 3;
         int spread_distance = 4;
@@ -64,13 +79,12 @@ struct WorldConfig {
         int low_evaporation_interal = 2;  // every n days apply modifer
     };
 
+    Creature creature;
     NutrientCluster nutrient_cluster;
     Moisture moisture;
     Fertility fertility;
     Sunlight sunlight;
     NutrientGrowth nutrient_growth;
-
-    int creature_start_count = 4;
 };
 
 #endif

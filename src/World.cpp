@@ -16,7 +16,7 @@ vector<string> mossling_traits = {
     "Joyful", "Keen",      "Mindful",  "Nimble",     "Patient",
     "Quiet",  "Resilient", "Serene",   "Thoughtful", "Watchful"};
 
-World::World(WorldConfig& config)
+World::World(const WorldConfig& config)
     : config(config),
       view_mode(config.view_mode),
       width(config.width),
@@ -24,7 +24,7 @@ World::World(WorldConfig& config)
     available_traits = mossling_traits;
 
     // prevent vector reallocation from invalidating tile occupant pointers
-    creatures.reserve(config.creature_start_count);
+    creatures.reserve(config.creature.start_count);
     nutrient_clusters.reserve(config.nutrient_cluster.start_count);
 
     this->createTiles();
@@ -47,11 +47,15 @@ int World::GetEntityCount(EntityType type) const {
 }
 
 void World::createTiles() {
-    tiles.resize(height, vector<Tile>(width));
+    tiles.clear();
+    tiles.resize(height);
+
     for (int row = 0; row < height; row++) {
+        tiles[row].reserve(width);
+
         for (int column = 0; column < width; column++) {
             int id = row * width + column;
-            tiles[row][column] = Tile(id, column, row);
+            tiles[row].emplace_back(id, column, row, config);
         }
     }
 }
@@ -60,7 +64,7 @@ Entity* World::CreateEntity(EntityType type, Tile* tile) {
     switch (type) {
         case CREATURE: {
             string trait = GetTrait();
-            Creature mossling(MOSSLING, next_creature_id, tile, trait);
+            Creature mossling(MOSSLING, next_creature_id, tile, trait, config);
             creatures.push_back(make_unique<Creature>(mossling));
             next_creature_id++;
             // get() returns the raw pointer inside the unique_ptr
@@ -126,7 +130,7 @@ Tile* World::SelectRandomTile(int start_id, int end_id) {
     int rand_pos = rand() % (end_id - start_id);
     int tile_id = rand_pos + start_id;
 
-    Position position = Tile::IdToCoordinates(tile_id, width, height);
+    Position position = Tile::IdToCoordinates(tile_id, width);
     tile = &tiles[position.y][position.x];
 
     return tile;
@@ -138,10 +142,10 @@ Tile* World::SelectRandomEmptyTile(int start_id, int end_id) {
         int rand_pos = rand() % (end_id - start_id);
         int tile_id = rand_pos + start_id;
 
-        Position position = Tile::IdToCoordinates(tile_id, width, height);
+        Position position = Tile::IdToCoordinates(tile_id, width);
         tile = &tiles[position.y][position.x];
 
-    } while (!tile->IsEmpty());
+    } while (!tile->IsEmpty());  // * Potential infinite loop
     return tile;
 }
 
@@ -179,7 +183,7 @@ void World::PlaceEntity(EntityType type, Tile& tile) {
 
 // Place by zone
 void World::InitializeCreatures() {
-    int count = config.creature_start_count;
+    int count = config.creature.start_count;
     auto zones = GetLinearZones(count);
 
     for (const auto& zone : zones) {
@@ -268,7 +272,7 @@ void World::PlaceMoistureSource(int amount, int start_id, int end_id,
 // Place by zone and config.source_count.
 void World::PlaceMoistureSources(int initial_amount, int sources,
                                  int spread_distance) {
-    auto zones = GetLinearZones(config.moisture.source_count);
+    auto zones = GetLinearZones(sources);
 
     for (const auto& zone : zones) {
         PlaceMoistureSource(initial_amount, zone.first, zone.second,
@@ -561,7 +565,8 @@ void World::ApplyEvaporation() {
         } else if (tile.GetSunlight() >=
                    config.sunlight.moderate_evaporation_threshold) {
             evaporation += config.sunlight.moderate_evaporation_modifier;
-        } else if (config.sunlight.low_evaporation_threshold) {
+        } else if (tile.GetSunlight() >=
+                   config.sunlight.low_evaporation_threshold) {
             if (day % config.sunlight.low_evaporation_interal == 0) {
                 evaporation += config.sunlight.low_evaporation_modifier;
             };
@@ -641,9 +646,7 @@ void World::UpdateEnvironment() {
 void World::BeginDay() {
     day++;
     ManageNutrientClusters();
-    if (day != 1) {
-        UpdateEnvironment();
-    }
+    UpdateEnvironment();
 }
 
 void World::RunCreatures() {
@@ -657,8 +660,6 @@ void World::RunCreatures() {
 }
 
 void World::SetViewMode(ViewMode mode) { view_mode = mode; }
-
-ViewMode World::GetViewMode(ViewMode mode) { return mode; }
 
 void World::PrintView() {
     switch (view_mode) {

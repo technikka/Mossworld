@@ -5,14 +5,15 @@
 #include "EntityType.h"
 #include "Position.h"
 
+struct WorldConfig;
+
 enum class FertilityLevel { None, Low, Moderate, High };
 enum class MoistureLevel { Dry, Damp, Ideal, Wet, Saturated };
 enum class SunlightLevel { Dark, Low, Moderate, Bright };
 
 class Tile {
    public:
-    Tile();
-    Tile(int id, int x, int y);
+    Tile(int id, int x, int y, const WorldConfig& config);
     int GetId();
     bool HasType(EntityType type) const;
     bool HasCreature() const;
@@ -22,8 +23,7 @@ class Tile {
     bool IsEmpty() const;
     char GetSymbol() const;
     Position GetPosition();
-    static Position IdToCoordinates(int tile_id, int world_width,
-                                    int world_height);
+    static Position IdToCoordinates(int tile_id, int world_width);
     int GetMoisture() const;
     void SetMoisture(int moisture);
     void AdjustMoisture(int amount);
@@ -42,6 +42,7 @@ class Tile {
     bool CanGrowNutrient();
 
    private:
+    const WorldConfig& config;
     int id;
     int x;
     int y;
@@ -50,14 +51,6 @@ class Tile {
     int fertility = 0;
     int sunlight = 0;
     int nutrient_growth_progress = 0;
-    static constexpr int min_moisture = 0;
-    static constexpr int max_moisture = 10;
-    static constexpr int min_fertility = 0;
-    static constexpr int max_fertility = 10;
-    static constexpr int min_sunlight = 0;
-    static constexpr int max_sunlight = 10;
-    static constexpr int nutrient_growth_progress_floor = 0;
-    static constexpr int nutrient_growth_progress_ceiling = 40;
 };
 
 #endif

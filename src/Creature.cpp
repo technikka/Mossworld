@@ -3,17 +3,22 @@ using namespace std;
 
 #include "Creature.h"
 #include "Position.h"
+#include "WorldConfig.h"
 
-Creature::Creature(CreatureType type, int id, Tile* current_tile, string trait)
-    : Entity(CREATURE, current_tile) {
-    this->type = type;
-    this->id = id;
-    this->trait = trait;
-    tile_history.push_back(current_tile);
-    energy = 10;
-    max_energy = 10;
+Creature::Creature(CreatureType type, int id, Tile* current_tile, string trait,
+                   const WorldConfig& config)
+    : Entity(CREATURE, current_tile),
+      config(config),
+      type(type),
+      id(id),
+      trait(trait),
+      energy(config.creature.initial_energy),
+      ideal_moisture(rand() % (config.moisture.max - config.moisture.min + 1) +
+                     config.moisture.min),
+      ideal_sunlight(rand() % (config.sunlight.max - config.sunlight.min + 1) +
+                     config.sunlight.min) {
     symbol = TraitToSymbol();
-    ideal_moisture = rand() % 10 + 1;
+    tile_history.push_back(current_tile);
 }
 
 char Creature::TraitToSymbol() const { return tolower(trait[0]); }
@@ -46,7 +51,7 @@ string Creature::GetTypeString() { return CreatureTypeToString(this->type); }
 
 string Creature::GetTrait() { return trait; }
 
-int Creature::GetMaxEnergy() { return max_energy; }
+int Creature::GetMaxEnergy() { return config.creature.max_energy; }
 
 void Creature::LoseDailyEnergy() {
     if (energy > 0) {
@@ -54,7 +59,7 @@ void Creature::LoseDailyEnergy() {
     }
 }
 
-void Creature::RestoreEnergy() { energy = max_energy; }
+void Creature::RestoreEnergy() { energy = config.creature.max_energy; }
 
 Tile* Creature::GetObjective() const { return objective_tile; }
 

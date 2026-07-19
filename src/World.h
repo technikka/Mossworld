@@ -1,6 +1,7 @@
 #ifndef WORLD_H
 #define WORLD_H
 
+#include <memory>
 #include <vector>
 
 #include "Creature.h"
@@ -10,7 +11,7 @@
 
 class World {
    public:
-    World(WorldConfig& config);
+    World(const WorldConfig& config);
     int GetWidth();
     int GetHeight();
     void PrintView();
@@ -25,7 +26,6 @@ class World {
     void Observe();
     void RunCreatures();
     void SetViewMode(ViewMode mode);
-    ViewMode GetViewMode(ViewMode mode);
 
     // * Grid indexing:
     // * tiles[row][column]
@@ -38,7 +38,7 @@ class World {
     std::vector<std::string> available_traits;
 
    private:
-    WorldConfig config;
+    const WorldConfig config;
     ViewMode view_mode;
     int height;
     int width;

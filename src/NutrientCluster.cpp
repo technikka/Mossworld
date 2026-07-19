@@ -7,6 +7,5 @@ using namespace std;
 
 NutrientCluster::NutrientCluster(Tile* current_tile)
     : Entity(NUTRIENT_CLUSTER, current_tile) {
-    this->type = type;
     symbol = '~';
 }

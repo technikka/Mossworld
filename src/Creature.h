@@ -7,6 +7,8 @@
 #include "Entity.h"
 #include "Tile.h"
 
+struct WorldConfig;
+
 enum class NutrientNeed { Low, Medium, High };
 
 // * add creature types here
@@ -15,7 +17,8 @@ std::string CreatureTypeToString(CreatureType type);
 
 class Creature : public Entity {
    public:
-    Creature(CreatureType type, int id, Tile* current_tile, std::string trait);
+    Creature(CreatureType type, int id, Tile* current_tile, std::string trait,
+             const WorldConfig& config);
     std::vector<Tile*> tile_history;
 
     // * Getters
@@ -39,12 +42,13 @@ class Creature : public Entity {
     void RestoreEnergy();
 
    private:
+    const WorldConfig& config;
     int energy;
     int id;
     int ideal_moisture;
+    int ideal_sunlight;
     CreatureType type;
     std::string trait;
-    int max_energy;
     // more than one creature can share an objective
     Tile* objective_tile = nullptr;
     char TraitToSymbol() const;

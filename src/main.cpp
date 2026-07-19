@@ -16,7 +16,7 @@ int main() {
     cout << "Welcome to Mossworld.\n";
     cout << "Tiny creatures stir among the morning dew.\n\n";
 
-    WorldConfig config;
+    const WorldConfig config;
     World world(config);  // instantiate world
 
     string input;
