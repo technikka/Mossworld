@@ -665,12 +665,18 @@ ViewMode World::GetViewMode(ViewMode mode) { return mode; }
 
 void World::PrintView() {
     switch (view_mode) {
+        case ViewMode::Inspector:
+            // * Change lambda here as needed for development:
+            PrintTileView([](Tile& tile) { return tile.GetFertility(); });
+            break;
         case ViewMode::World:
-            PrintWorldView();
+            PrintTileView([](Tile& tile) { return tile.GetSymbol(); });
             break;
         case ViewMode::Moisture:
-            PrintMoistureView();
+            PrintTileView([](Tile& tile) { return tile.GetMoisture(); });
             break;
+        case ViewMode::Sunlight:
+            PrintTileView([](Tile& tile) { return tile.GetSunlight(); });
     }
 }
 
@@ -681,56 +687,25 @@ void World::Observe() {
     PrintObserverMenu();
 }
 
-void World::PrintMoistureView() {
-    cout << "\n" << right;  // space above world
-    for (int row = 0; row < height; row++) {
-        cout << string(config.left_margin, ' ');
-        for (int column = 0; column < width; column++) {
-            Tile& tile = tiles[row][column];
-            if (tile.HasCreature()) {
-                string cell = "[";
-                cell += tile.GetSymbol();
-                cell += "]";
+template <typename Callable>
+void World::PrintTileView(Callable callable) {
+    bool overlay_creatures = view_mode != ViewMode::World;
 
-                cout << setw(4) << cell;
-                continue;
-            }
-            cout << setw(4) << tile.GetMoisture();
-        }
-        cout << endl;
-    }
-    cout << endl;
-}
-
-// Use for current implementation testing.
-void World::PrintTestView() {
     cout << "\n" << right;
     for (int row = 0; row < height; row++) {
         cout << string(config.left_margin, ' ');
         for (int column = 0; column < width; column++) {
             Tile& tile = tiles[row][column];
-            // print creature:
-            // if (tile.HasCreature()) {
-            //     string cell = "[";
-            //     cell += tile.GetSymbol();
-            //     cell += "]";
+            auto tile_value = callable(tile);
 
-            //     cout << setw(4) << cell;
-            //     continue;
-            // }
-            cout << setw(4) << tile.GetNutrientGrowthProgress();
-        }
-        cout << endl;
-    }
-    cout << endl;
-}
-
-void World::PrintWorldView() {
-    cout << "\n" << right;  // space above world
-    for (int row = 0; row < height; row++) {
-        cout << string(config.left_margin, ' ');
-        for (int column = 0; column < width; column++) {
-            cout << setw(4) << tiles[row][column].GetSymbol();
+            if (overlay_creatures && tile.HasCreature()) {
+                string cell = "[";
+                cell += to_string(tile_value);
+                cell += "]";
+                cout << setw(4) << cell;
+                continue;
+            }
+            cout << setw(4) << tile_value;
         }
         cout << endl;
     }
@@ -760,9 +735,9 @@ string World::MoistureBar(int current, int ideal) {
 void World::PrintObserverMenu() const {
     cout << "\n";
     cout << "A new day is unfolding.\n\n";
-    cout << " Observe ➜ Enter |  Switch View ➜ 1: World  2: Moisture  |  Leave "
-            "➜ "
-            "'exit'\n";
+    // ⬚ ▦ ⌂ ⊞
+    cout << "Observe ➜ Enter   Leave ➜ 'exit'\n";
+    cout << "View ➜ 1: ⌂ 2: ≈  3: ☀" << endl;
     cout << "❯ ";
 }
 

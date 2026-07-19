@@ -44,6 +44,16 @@ int main() {
                 world.SetViewMode(ViewMode::Moisture);
                 world.Observe();
             }
+
+            if (input == "3") {
+                world.SetViewMode(ViewMode::Sunlight);
+                world.Observe();
+            }
+
+            if (input == "0") {
+                world.SetViewMode(ViewMode::Inspector);
+                world.Observe();
+            }
         }
 
         world.BeginDay();

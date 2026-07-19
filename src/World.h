@@ -14,12 +14,13 @@ class World {
     int GetWidth();
     int GetHeight();
     void PrintView();
-    void PrintWorldView();
-    void PrintMoistureView();
+
+    template <typename Callable>
+    void PrintTileView(Callable callable);
+
     void PrintStatusBar() const;
     void PrintCreatureBar();
     void PrintObserverMenu() const;
-    void PrintTestView();
     void BeginDay();
     void Observe();
     void RunCreatures();
