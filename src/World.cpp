@@ -397,9 +397,13 @@ Tile* World::SelectCreatureTile(Creature& creature) {
 }
 
 void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
-    cout << "\n\n"
-         << Narration::NutrientFound(creature.GetNutrientNeed(),
-                                     creature.GetType(), creature.GetTrait());
+    if (Narration::IsEnabled()) {
+        cout << "\n\n"
+             << Narration::NutrientFound(creature.GetNutrientNeed(),
+                                         creature.GetType(),
+                                         creature.GetTrait());
+    }
+
     creature.RestoreEnergy();
 
     // remove nutrient cluster from its container

@@ -4,7 +4,12 @@
 
 using namespace std;
 
+static bool enabled = true;
+
 namespace Narration {
+
+void SetEnabled(bool value) { enabled = value; }
+bool IsEnabled() { return enabled; }
 
 string NutrientFound(NutrientNeed need, CreatureType type,
                      const string& trait) {

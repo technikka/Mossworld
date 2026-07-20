@@ -1,23 +1,49 @@
 #include <array>
+#include <chrono>
 #include <cstdlib>  // for rand()
 #include <ctime>
 #include <iostream>
 #include <string>
-using namespace std;
+
+using namespace std;  // needs to be above header files
 
 #include "Creature.h"
+#include "Narration.h"
 #include "World.h"
 
-int main() {
+void BenchmarkSimulation(World& world) {
+    int sim_runs = 1000;
+
+    Narration::SetEnabled(false);
+    auto start = chrono::steady_clock::now();
+
+    for (int i = 0; i < sim_runs; i++) {
+        world.BeginDay();
+        world.RunCreatures();
+    }
+
+    auto end = chrono::steady_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+
+    cout << "Simulation took " << duration.count() << " microseconds for "
+         << sim_runs << " runs.";
+}
+
+int main(int argc, char* argv[]) {
     srand(time(0));  // seed rand
+
+    const WorldConfig config;
+    World world(config);  // instantiate world
+
+    if (argc > 1 && string(argv[1]) == "--benchmark") {
+        BenchmarkSimulation(world);
+        return 0;
+    }
 
     cout << "\n";
     cout << "──────────────────────────────────────────────────────────────\n";
     cout << "Welcome to Mossworld.\n";
     cout << "Tiny creatures stir among the morning dew.\n\n";
-
-    const WorldConfig config;
-    World world(config);  // instantiate world
 
     string input;
 
