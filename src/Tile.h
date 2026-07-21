@@ -20,6 +20,7 @@ class Tile {
     bool HasNutrientCluster() const;
     Entity* GetOccupant() const;
     void SetOccupant(Entity* occupant);
+    void RemoveOccupant();
     bool IsEmpty() const;
     char GetSymbol() const;
     Position GetPosition();

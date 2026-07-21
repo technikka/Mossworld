@@ -18,6 +18,14 @@ struct WorldConfig {
 
     struct NutrientCluster {
         int start_count = 8;
+
+        int stress_min = 0;
+        int stress_max = 10;
+        int initial_stress = 0;
+        int stress_recovery = -2;
+        int sunlight_stress_modifier = 1;
+        int moisture_stress_modifier = 1;
+        int fertility_stress_modifier = 1;
     };
 
     struct NutrientGrowth {

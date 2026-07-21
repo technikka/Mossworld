@@ -10,7 +10,13 @@
 
 class NutrientCluster : public Entity {
    public:
-    NutrientCluster(Tile* current_tile);
+    NutrientCluster(Tile* current_tile, const WorldConfig& config);
+    int GetStress();
+    void AdjustStress(int adjustment);
+
+   private:
+    const WorldConfig& config;
+    int stress;
 };
 
 #endif

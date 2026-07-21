@@ -57,12 +57,14 @@ class World {
     void InitializeNutrientClusters();
     void InitializeCreatures();
     Entity* CreateEntity(EntityType type, Tile* tile);
-    void RemoveEntity(EntityType type, Tile* tile);
+    void RemoveEntity(Tile* tile);
     std::vector<Tile*> GetAdjacentOpenTiles(Tile* tile);
     Tile* SelectCreatureTile(Creature& creature);
     void MoveCreature(Creature& creature);
     std::string GetTrait();
     void ManageNutrientClusters();
+    void UpdateNutrientClusterStress(NutrientCluster& nutrient_cluster);
+    int CalculateNutrientStress(Tile& tile);
     int CalculateNutrientGrowth(const Tile& tile);
     int CalculateFertilityGrowthModifier(const Tile& tile);
     int CalculateMoistureGrowthModifier(const Tile& tile);

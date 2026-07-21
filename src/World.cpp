@@ -71,7 +71,7 @@ Entity* World::CreateEntity(EntityType type, Tile* tile) {
             return creatures.back().get();
         }
         case NUTRIENT_CLUSTER: {
-            NutrientCluster nutrients(tile);
+            NutrientCluster nutrients(tile, config);
             nutrient_clusters.push_back(
                 (make_unique<NutrientCluster>(nutrients)));
             return nutrient_clusters.back().get();
@@ -79,18 +79,27 @@ Entity* World::CreateEntity(EntityType type, Tile* tile) {
     }
 }
 
-void World::RemoveEntity(EntityType type, Tile* tile) {
-    switch (type) {
+void World::RemoveEntity(Tile* tile) {
+    if (tile->IsEmpty()) {
+        return;
+    }
+    switch (tile->GetOccupant()->GetType()) {
         case CREATURE: {
             // place holder
             break;
         }
         case NUTRIENT_CLUSTER: {
-            // find the nutrient cluster by position
-            // remove it from the nutrient cluster vector
+            auto* nutrient_cluster =
+                static_cast<NutrientCluster*>(tile->GetOccupant());
+            erase_if(nutrient_clusters,
+                     [nutrient_cluster](const auto& cluster) {
+                         return cluster.get() == nutrient_cluster;
+                     });
             break;
         }
     }
+
+    tile->RemoveOccupant();
 };
 
 template <typename Callable>
@@ -492,11 +501,54 @@ int World::CalculateNutrientGrowth(const Tile& tile) {
     return growth;
 }
 
-// HandleNutrientGrowth
+int World::CalculateNutrientStress(Tile& tile) {
+    int stress = 0;
+    int sunlight_stress = config.nutrient_cluster.sunlight_stress_modifier;
+    int moisture_stress = config.nutrient_cluster.moisture_stress_modifier;
+    int fertility_stress = config.nutrient_cluster.fertility_stress_modifier;
+
+    int sunlight_modifier = CalculateSunlightGrowthModifier(tile);
+    int moisture_modifier = CalculateMoistureGrowthModifier(tile);
+
+    if (sunlight_modifier < 0) {
+        stress += sunlight_stress;
+    }
+
+    if (moisture_modifier < 0) {
+        stress += moisture_stress;
+    }
+
+    if (tile.GetFertilityLevel() == FertilityLevel::None) {
+        stress += fertility_stress;
+    }
+
+    return stress;
+}
+
+void World::UpdateNutrientClusterStress(NutrientCluster& nutrient_cluster) {
+    Tile& tile = *nutrient_cluster.GetCurrentTile();
+    int daily_stress = CalculateNutrientStress(tile);
+
+    if (daily_stress > 0) {
+        nutrient_cluster.AdjustStress(daily_stress);
+    } else {
+        nutrient_cluster.AdjustStress(config.nutrient_cluster.stress_recovery);
+    }
+}
+
+// Handle growth and condition.
 void World::ManageNutrientClusters() {
     ForEachTile([this](Tile& tile) {
         if (tile.HasNutrientCluster()) {
-            return;
+            // Safe after HasNutrientCluster(): GetOccupant() returns Entity*.
+            auto* nutrient_cluster =
+                static_cast<NutrientCluster*>(tile.GetOccupant());
+            UpdateNutrientClusterStress(*nutrient_cluster);
+            if (nutrient_cluster->GetStress() >=
+                config.nutrient_cluster.stress_max) {
+                RemoveEntity(&tile);
+                return;
+            }
         }
         tile.AdjustNutrientGrowthProgress(CalculateNutrientGrowth(tile));
 
@@ -677,7 +729,16 @@ void World::PrintView() {
     switch (view_mode) {
         case ViewMode::Inspector:
             // * Change lambda here as needed for development:
-            PrintTileView([](Tile& tile) { return tile.GetFertility(); });
+            PrintTileView([](Tile& tile) {
+                if (!tile.HasNutrientCluster()) {
+                    return 0;
+                }
+
+                auto* nutrient_cluster =
+                    static_cast<NutrientCluster*>(tile.GetOccupant());
+
+                return nutrient_cluster->GetStress();
+            });
             break;
         case ViewMode::World:
             PrintTileView([](Tile& tile) { return tile.GetSymbol(); });

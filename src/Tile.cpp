@@ -14,6 +14,8 @@ Entity* Tile::GetOccupant() const { return occupant; }
 
 void Tile::SetOccupant(Entity* occupant) { this->occupant = occupant; };
 
+void Tile::RemoveOccupant() { occupant = nullptr; }
+
 bool Tile::IsEmpty() const { return occupant == nullptr; };
 
 bool Tile::HasType(EntityType type) const {
