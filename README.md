@@ -34,7 +34,7 @@ While working on the simulation, I discovered a passion for simulation engineeri
 
 Through Mossworld, I explore how simple rules become living systems, how those systems give rise to complex behaviors, and how those behaviors naturally create quiet, emergent stories.
 
-I expect Mossworld to remain a long-term project, growing alongside my understanding of C++, simulation engineering, and artificial life while serving as the centerpiece of my portfolio.
+I expect Mossworld to remain a long-term project, growing alongside my understanding of C++, simulation engineering, and artificial life.
 
 
 ## Current State
@@ -44,7 +44,7 @@ Mossworld is in active development and currently includes:
 * A persistent tile-based world simulation with switchable environmental observation views
 * A flexible tile scoring system that supports increasingly sophisticated creature decision-making
 * Procedural placement of creatures and environmental resources
-* Tile-based nutrient growth where local environmental conditions shape accumulated growth progress
+* Dynamic nutrient clusters that grow and decay in response to local environmental conditions
 * A persistent moisture system shaped by morning dew and sunlight-driven evaporation
 * A sunlight system that forms natural gradients across the world and interacts with other environmental systems
 * Tile fertility that changes over time in response to moisture and ecological activity
