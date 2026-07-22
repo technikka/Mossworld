@@ -2,6 +2,8 @@
 #include <iomanip>  // for printing
 #include <iostream>
 #include <limits>
+#include <sstream>
+#include <string>
 using namespace std;
 
 #include "Creature.h"
@@ -407,10 +409,7 @@ Tile* World::SelectCreatureTile(Creature& creature) {
 
 void World::HandleNutrientConsumption(Creature& creature, Tile* tile) {
     if (Narration::IsEnabled()) {
-        cout << "\n\n"
-             << Narration::NutrientFound(creature.GetNutrientNeed(),
-                                         creature.GetType(),
-                                         creature.GetTrait());
+        Narration::AddEvent(Narration::NutrientFound(creature, day));
     }
 
     creature.RestoreEnergy();
@@ -709,6 +708,7 @@ void World::UpdateEnvironment() {
 
 void World::BeginDay() {
     day++;
+    Narration::current_narration_events.clear();
     ManageNutrientClusters();
     UpdateEnvironment();
 }
@@ -752,10 +752,60 @@ void World::PrintView() {
 }
 
 void World::Observe() {
+    if (day > 1) {
+        PrintDivider();
+    }
+    PrintEventNotification();
     PrintView();
     PrintStatusBar();
     PrintCreatureBar();
     PrintObserverMenu();
+    if (IsJournalOpen()) {
+        PrintJournal();
+    }
+}
+
+void World::PrintDivider() const {
+    cout << "\n";
+    cout << string(config.left_margin, ' ')
+         << "──────────────────────────────────────────────────────────────────"
+            "──"  // 68 chars
+         << "\n\n";
+}
+
+void World::PrintLeftMargin() const { cout << string(config.left_margin, ' '); }
+
+void World::PrintLine(const string& text) const {
+    PrintLeftMargin();
+    cout << text << '\n';
+}
+
+void World::PrintCentered(const string& text) const {
+    PrintLeftMargin();
+    cout << right << setw((68 + text.length()) / 2) << text << "\n\n";
+}
+
+void World::PrintEventNotification() const {
+    int sig_events = 0;
+    for (int i = 0; i < Narration::current_narration_events.size(); i++) {
+        const auto& event = Narration::current_narration_events.at(i);
+
+        if (event.priority == Narration::Priority::Critical ||
+            event.priority == Narration::Priority::High) {
+            sig_events++;
+        }
+    }
+    if (sig_events > 0) {
+        cout << "\n";
+        if (sig_events == 1) {
+            PrintLine(to_string(sig_events) +
+                      " significant event occured today. Details in journal.");
+
+        } else {
+            PrintLine(to_string(sig_events) +
+                      " significant events occured today. Details in journal.");
+        }
+    }
 }
 
 template <typename Callable>
@@ -809,26 +859,77 @@ string World::PreferenceBar(Creature& creature) {
 }
 
 void World::PrintObserverMenu() const {
+    cout << "\n\n";
+    // cout << "A new day is unfolding.\n\n";
+    PrintLine("Observe ➜ Enter   Leave ➜ 'exit'");
+    PrintLine("Change View ➜ 1: ⌂ 2: ≈  3: ☀");
+    PrintLine("Open/Close Journal ➜ 'J'");
     cout << "\n";
-    cout << "A new day is unfolding.\n\n";
-    cout << "Observe ➜ Enter   Leave ➜ 'exit'\n";
-    cout << "Change View ➜ 1: ⌂ 2: ≈  3: ☀" << endl;
-    cout << "❯ ";
+    PrintLeftMargin();
+    cout << "❯ " << flush;
+}
+
+void World::PrintWrapped(const string& text, size_t width,
+                         size_t indent) const {
+    string indentation(indent, ' ');
+    istringstream stream(text);
+    string word;
+    size_t line_length = 0;
+
+    cout << indentation;
+
+    while (stream >> word) {
+        if (line_length == 0) {
+            std::cout << word;
+            line_length = word.length();
+        } else if (line_length + 1 + word.length() <= width) {
+            std::cout << ' ' << word;
+            line_length += 1 + word.length();
+        } else {
+            std::cout << '\n' << indentation << word;
+            line_length = word.length();
+        }
+    }
+
+    std::cout << '\n';
+}
+
+void World::PrintJournal() const {
+    cout << "\n";
+    PrintDivider();
+    PrintCentered("=== Journal ===");
+    if (Narration::narration_history.empty()) {
+        PrintCentered("No entries.");
+    } else {
+        int last_printed_day = -1;
+        for (const Narration::Event& event : Narration::narration_history) {
+            if (event.day != last_printed_day) {
+                PrintCentered("⬢ Day " + to_string(event.day));
+                last_printed_day = event.day;
+            }
+            PrintWrapped(event.text, 64, config.left_margin);
+            cout << "\n";
+        }
+    }
+    PrintDivider();
+    PrintLeftMargin();
+    cout << "❯ " << flush;
 }
 
 void World::PrintStatusBar() const {
     cout << "\n";
+    PrintLeftMargin();
     cout << " Day: " << left << setw(5) << day << " Mosslings: " << setw(5)
          << GetEntityCount(CREATURE) << " Nutrient Clusters: " << setw(5)
          << GetEntityCount(NUTRIENT_CLUSTER)
-         << "Viewing: " << ModeToString(view_mode) << "\n";
-    cout << "\n";
+         << "Viewing: " << ModeToString(view_mode) << "\n\n";
 }
 
 void World::PrintCreatureBar() {
     cout << "\n";
-    cout << "   - Mosslings -          - Current / Ideal -   \n";
+    PrintLine("   - Mosslings -          - Current / Ideal -   ");
     for (auto& creature : creatures) {
+        PrintLeftMargin();
         cout << left << setw(11) << creature->GetTrait()
              << EnergyBar(creature->GetEnergy(), creature->GetMaxEnergy())
              << PreferenceBar(*creature) << endl;
@@ -846,3 +947,7 @@ string World::GetTrait() {
     available_traits.erase(available_traits.begin() + rand_index);
     return trait;
 }
+
+void World::ToggleJournal() { journal_open = !journal_open; }
+
+bool World::IsJournalOpen() const { return journal_open; }

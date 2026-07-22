@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Creature.h"
+#include "Narration.h"
 #include "NutrientCluster.h"
 #include "Tile.h"
 #include "WorldConfig.h"
@@ -22,6 +23,16 @@ class World {
     void PrintStatusBar() const;
     void PrintCreatureBar();
     void PrintObserverMenu() const;
+    void PrintEventNotification() const;
+    void PrintWrapped(const std::string& text, std::size_t width,
+                      std::size_t indent) const;
+    void PrintDivider() const;
+    void PrintLeftMargin() const;
+    void PrintCentered(const string& text) const;
+    void PrintLine(const string& text) const;
+    void PrintJournal() const;
+    void ToggleJournal();
+    bool IsJournalOpen() const;
     void BeginDay();
     void Observe();
     void RunCreatures();
@@ -40,6 +51,7 @@ class World {
    private:
     const WorldConfig config;
     ViewMode view_mode;
+    bool journal_open = false;
     int height;
     int width;
     int next_creature_id = 1;

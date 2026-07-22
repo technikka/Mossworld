@@ -40,10 +40,10 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    cout << "\n";
-    cout << "──────────────────────────────────────────────────────────────\n";
-    cout << "Welcome to Mossworld.\n";
-    cout << "Tiny creatures stir among the morning dew.\n\n";
+    world.PrintDivider();
+    world.PrintLine("Welcome to Mossworld.");
+    world.PrintLine("Tiny creatures stir among the morning dew.");
+    cout << "\n\n";
 
     string input;
 
@@ -73,6 +73,11 @@ int main(int argc, char* argv[]) {
 
             if (input == "3") {
                 world.SetViewMode(ViewMode::Sunlight);
+                world.Observe();
+            }
+
+            if (input == "j" || input == "J") {
+                world.ToggleJournal();
                 world.Observe();
             }
 
