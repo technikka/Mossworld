@@ -18,12 +18,12 @@ class Entity {
     void SetCurrentTile(Tile* tile);
     EntityType GetType() const;
 
-    char GetSymbol() const;
+    std::string GetSymbol() const;
 
    protected:
     Tile* current_tile = nullptr;
     EntityType type;
-    char symbol;
+    std::string symbol;
 };
 
 #endif

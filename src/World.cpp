@@ -28,6 +28,7 @@ World::World(const WorldConfig& config)
     // prevent vector reallocation from invalidating tile occupant pointers
     creatures.reserve(config.creature.start_count);
     nutrient_clusters.reserve(config.nutrient_cluster.start_count);
+    stones.reserve(config.stone.start_count);
 
     this->createTiles();
     this->InitializeEnvironment();
@@ -45,7 +46,10 @@ int World::GetEntityCount(EntityType type) const {
 
         case NUTRIENT_CLUSTER:
             return nutrient_clusters.size();
+        case STONE:
+            return stones.size();
     }
+    return 0;
 }
 
 void World::createTiles() {
@@ -78,7 +82,11 @@ Entity* World::CreateEntity(EntityType type, Tile* tile) {
                 (make_unique<NutrientCluster>(nutrients)));
             return nutrient_clusters.back().get();
         }
+        case STONE: {
+            // place holder
+        }
     }
+    return 0;
 }
 
 void World::RemoveEntity(Tile* tile) {
@@ -97,6 +105,10 @@ void World::RemoveEntity(Tile* tile) {
                      [nutrient_cluster](const auto& cluster) {
                          return cluster.get() == nutrient_cluster;
                      });
+            break;
+        }
+        case STONE: {
+            // place holder
             break;
         }
     }
@@ -820,10 +832,9 @@ void World::PrintTileView(Callable callable) {
             auto tile_value = callable(tile);
 
             if (overlay_creatures && tile.HasCreature()) {
-                string cell = "[";
-                cell += to_string(tile_value);
-                cell += "]";
-                cout << setw(4) << cell;
+                ostringstream stream;
+                stream << "[" << tile_value << "]";
+                cout << setw(4) << stream.str();
                 continue;
             }
             cout << setw(4) << tile_value;

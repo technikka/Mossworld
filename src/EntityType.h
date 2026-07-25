@@ -3,7 +3,7 @@
 
 #include <string>
 
-enum EntityType { CREATURE, NUTRIENT_CLUSTER };
+enum EntityType { CREATURE, NUTRIENT_CLUSTER, STONE };
 
 inline std::string EntityTypeToString(EntityType type) {
     switch (type) {
@@ -12,6 +12,8 @@ inline std::string EntityTypeToString(EntityType type) {
 
         case NUTRIENT_CLUSTER:
             return "Nutrient Cluster";
+        case STONE:
+            return "Stone";
     }
     return "?";  // should never be reached
 }

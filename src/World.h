@@ -7,6 +7,7 @@
 #include "Creature.h"
 #include "Narration.h"
 #include "NutrientCluster.h"
+#include "Stone.h"
 #include "Tile.h"
 #include "WorldConfig.h"
 
@@ -46,6 +47,7 @@ class World {
 
     std::vector<std::unique_ptr<Creature>> creatures;
     std::vector<std::unique_ptr<NutrientCluster>> nutrient_clusters;
+    std::vector<std::unique_ptr<Stone>> stones;
     std::vector<std::string> available_traits;
 
    private:

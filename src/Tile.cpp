@@ -26,9 +26,9 @@ bool Tile::HasCreature() const { return HasType(CREATURE); }
 
 bool Tile::HasNutrientCluster() const { return HasType(NUTRIENT_CLUSTER); }
 
-char Tile::GetSymbol() const {
+string Tile::GetSymbol() const {
     if (occupant == nullptr) {
-        return '.';
+        return ".";
     }
 
     return occupant->GetSymbol();

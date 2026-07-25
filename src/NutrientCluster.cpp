@@ -10,7 +10,7 @@ using namespace std;
 NutrientCluster::NutrientCluster(Tile* current_tile, const WorldConfig& config)
     : Entity(NUTRIENT_CLUSTER, current_tile), config(config) {
     stress = config.nutrient_cluster.initial_stress;
-    symbol = '~';
+    symbol = "~";
 }
 
 int NutrientCluster::GetStress() { return stress; }

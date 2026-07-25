@@ -22,7 +22,7 @@ class Tile {
     void SetOccupant(Entity* occupant);
     void RemoveOccupant();
     bool IsEmpty() const;
-    char GetSymbol() const;
+    std::string GetSymbol() const;
     Position GetPosition();
     static Position IdToCoordinates(int tile_id, int world_width);
     int GetMoisture() const;

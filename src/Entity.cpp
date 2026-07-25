@@ -1,6 +1,10 @@
 #include "Entity.h"
 
+#include <string>
+
 #include "Tile.h"
+
+using namespace std;
 
 Entity::Entity(EntityType type, Tile* current_tile) {
     this->type = type;
@@ -15,4 +19,4 @@ EntityType Entity::GetType() const { return type; }
 
 Position Entity::GetPosition() const { return GetCurrentTile()->GetPosition(); }
 
-char Entity::GetSymbol() const { return symbol; }
+string Entity::GetSymbol() const { return symbol; }

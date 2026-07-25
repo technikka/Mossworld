@@ -28,6 +28,10 @@ struct WorldConfig {
         int fertility_stress_modifier = 1;
     };
 
+    struct Stone {
+        int start_count = 4;
+    };
+
     struct NutrientGrowth {
         int progress_floor = 0;
         int progress_ceiling = 40;
@@ -89,6 +93,7 @@ struct WorldConfig {
 
     Creature creature;
     NutrientCluster nutrient_cluster;
+    Stone stone;
     Moisture moisture;
     Fertility fertility;
     Sunlight sunlight;

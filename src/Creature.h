@@ -52,7 +52,7 @@ class Creature : public Entity {
     std::string trait;
     // more than one creature can share an objective
     Tile* objective_tile = nullptr;
-    char TraitToSymbol() const;
+    std::string TraitToSymbol() const;
 };
 
 #endif

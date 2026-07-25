@@ -21,7 +21,10 @@ Creature::Creature(CreatureType type, int id, Tile* current_tile, string trait,
     tile_history.push_back(current_tile);
 }
 
-char Creature::TraitToSymbol() const { return tolower(trait[0]); }
+string Creature::TraitToSymbol() const {
+    char symbol = static_cast<char>(tolower(trait[0]));
+    return string(1, symbol);
+}
 
 string CreatureTypeToString(CreatureType type) {
     switch (type) {
