@@ -31,6 +31,7 @@ World::World(const WorldConfig& config)
     stones.reserve(config.stone.start_count);
 
     this->createTiles();
+    this->InitializeStone();
     this->InitializeEnvironment();
     this->InitializeCreatures();
     this->InitializeNutrientClusters();
@@ -83,7 +84,9 @@ Entity* World::CreateEntity(EntityType type, Tile* tile) {
             return nutrient_clusters.back().get();
         }
         case STONE: {
-            // place holder
+            Stone stone(tile);
+            stones.push_back((make_unique<Stone>(stone)));
+            return stones.back().get();
         }
     }
     return 0;
@@ -207,6 +210,9 @@ void World::PlaceEntity(EntityType type, Tile& tile) {
 // Place by zone
 void World::InitializeCreatures() {
     int count = config.creature.start_count;
+    if (count == 0) {
+        return;
+    }
     auto zones = GetLinearZones(count);
 
     for (const auto& zone : zones) {
@@ -220,6 +226,9 @@ void World::InitializeCreatures() {
 
 void World::InitializeNutrientClusters() {
     int count = config.nutrient_cluster.start_count;
+    if (count == 0) {
+        return;
+    }
     for (int i = 0; i < count; i++) {
         Tile* tile = SelectRandomNutrientGrowthTile();
         if (tile == nullptr) {
@@ -230,13 +239,36 @@ void World::InitializeNutrientClusters() {
     }
 }
 
+void World::InitializeStone() {
+    int stone_count = config.stone.start_count;
+    if (stone_count == 0) {
+        return;
+    }
+    int zone_count = static_cast<int>(std::round(std::sqrt(stone_count)));
+    auto zones = GetLinearZones(zone_count);
+
+    for (int zone_index = 0; zone_index < zones.size(); zone_index++) {
+        const auto& zone = zones[zone_index];
+        int stones_for_zone = stone_count / zone_count;
+        if (zone_index < stone_count % zone_count) {
+            stones_for_zone++;
+        }
+        for (int i = 0; i < stones_for_zone; i++) {
+            Tile* tile = SelectRandomTile(zone.first, zone.second);
+            if (tile == nullptr) {
+                return;
+            }
+            PlaceEntity(STONE, *tile);
+        }
+    }
+}
+
 void World::PlaceNutrientCluster(Tile& tile) {
     PlaceEntity(NUTRIENT_CLUSTER, tile);
 }
 
 template <typename Callable>
-void World::ForEachTileInRing(Tile* tile, int spread_amount, int distance,
-                              Callable callable) {
+void World::ForEachTileInRing(Tile* tile, int distance, Callable callable) {
     Position pos = tile->GetPosition();
 
     for (int y_offset = -distance; y_offset <= distance; y_offset++) {
@@ -256,32 +288,44 @@ void World::ForEachTileInRing(Tile* tile, int spread_amount, int distance,
                 continue;
             }
 
-            callable(tiles[new_y][new_x], spread_amount);
+            callable(tiles[new_y][new_x]);
         }
     }
 }
 
 void World::PlaceMoistureSpread(Tile* tile, int amount, int spread_distance) {
-    // First ring of tiles gets 70% moisture.
-    double percent = 0.7;
+    double percent = config.moisture.dew_initial_retention;
     for (int i = 1; i <= spread_distance; i++) {
         amount *= percent;
-        ForEachTileInRing(tile, amount, i,
-                          [](Tile& ring_tile, int spread_amount) {
-                              ring_tile.AdjustMoisture(spread_amount);
-                          });
-        percent *= 0.5;
+        ForEachTileInRing(tile, i, [amount](Tile& ring_tile) {
+            ring_tile.AdjustMoisture(amount);
+        });
+        percent *= config.moisture.dew_retention_decay;
     }
 }
 
 void World::PlaceSunlightSpread(Tile* tile, int amount, int spread_distance) {
-    // Each ring gets 1 less intensity
     for (int i = 1; i <= spread_distance; i++) {
-        ForEachTileInRing(tile, amount, i,
-                          [](Tile& ring_tile, int spread_amount) {
-                              ring_tile.SetSunlightIfGreater(spread_amount);
-                          });
-        amount -= 1;
+        ForEachTileInRing(tile, i, [amount](Tile& ring_tile) {
+            if (amount > ring_tile.GetBaseSunlight()) {
+                ring_tile.SetBaseSunlight(amount);
+                ring_tile.SetEffectiveSunlight(amount);
+            }
+        });
+        amount -= config.sunlight.spread_falloff;
+    }
+}
+
+void World::PlaceShadeSpread(Tile* tile, int amount, int spread_distance) {
+    for (int i = 1; i <= spread_distance; i++) {
+        ForEachTileInRing(tile, i, [amount](Tile& ring_tile) {
+            int shade = ring_tile.GetBaseSunlight() - amount;
+
+            if (shade < ring_tile.GetEffectiveSunlight()) {
+                ring_tile.SetEffectiveSunlight(shade);
+            }
+        });
+        amount -= config.stone.shade_spread_falloff;
     }
 }
 
@@ -303,6 +347,7 @@ void World::PlaceMoistureSources(int initial_amount, int sources,
     }
 }
 
+// For Creature; NutrientCluster doesn't block openness.
 vector<Tile*> World::GetAdjacentOpenTiles(Tile* current_tile) {
     vector<Position> possible_positions;
     Position position = current_tile->GetPosition();
@@ -322,8 +367,7 @@ vector<Tile*> World::GetAdjacentOpenTiles(Tile* current_tile) {
 
         Tile* tile = &tiles[position.y][position.x];
 
-        // EntityType CREATURE is the only obstacle to occupying a new tile.
-        if (!tile->HasCreature()) {
+        if (tile->HasNutrientCluster() || tile->IsEmpty()) {
             valid_tiles.push_back(tile);
         }
     }
@@ -357,7 +401,7 @@ int World::ScoreMoisture(Tile& tile, Creature& creature) {
 
 int World::ScoreSunlight(Tile& tile, Creature& creature) {
     int sunlight_difference =
-        abs(tile.GetSunlight() - creature.GetIdealSunlight());
+        abs(tile.GetEffectiveSunlight() - creature.GetIdealSunlight());
 
     return 10 - sunlight_difference;
 }
@@ -486,9 +530,27 @@ int World::CalculateMoistureGrowthModifier(const Tile& tile) {
     return growth;
 }
 
+int World::CalculateEffectiveSunlight(Tile& tile) {
+    int sunlight = tile.GetBaseSunlight();
+    sunlight -= config.stone.shade;
+    return sunlight;
+}
+
+void World::UpdateSunlight() {
+    ForEachTile([this](Tile& tile) {
+        if (tile.HasStone()) {
+            int sunlight = CalculateEffectiveSunlight(tile);
+            tile.SetEffectiveSunlight(sunlight);
+            PlaceShadeSpread(&tile,
+                             sunlight - config.stone.shade_spread_falloff,
+                             config.stone.shade_spread_distance);
+        }
+    });
+}
+
 int World::CalculateSunlightGrowthModifier(const Tile& tile) {
     int growth = 0;
-    SunlightLevel sunlight_level = tile.GetSunlightLevel();
+    SunlightLevel sunlight_level = tile.GetEffectiveSunlightLevel();
 
     if (sunlight_level == SunlightLevel::Bright) {
         growth += config.nutrient_growth.bright_sunlight_modifier;
@@ -635,13 +697,12 @@ void World::ApplyEvaporation() {
     ForEachTile([this](Tile& tile) {
         int evaporation = 0;
 
-        if (tile.GetSunlight() >= config.sunlight.high_evaporation_threshold) {
+        int sunlight = tile.GetEffectiveSunlight();
+        if (sunlight >= config.sunlight.high_evaporation_threshold) {
             evaporation += config.sunlight.high_evaporation_modifier;
-        } else if (tile.GetSunlight() >=
-                   config.sunlight.moderate_evaporation_threshold) {
+        } else if (sunlight >= config.sunlight.moderate_evaporation_threshold) {
             evaporation += config.sunlight.moderate_evaporation_modifier;
-        } else if (tile.GetSunlight() >=
-                   config.sunlight.low_evaporation_threshold) {
+        } else if (sunlight >= config.sunlight.low_evaporation_threshold) {
             if (day % config.sunlight.low_evaporation_interal == 0) {
                 evaporation += config.sunlight.low_evaporation_modifier;
             };
@@ -701,18 +762,22 @@ void World::InitializeSunlight() {
     int amount = config.sunlight.initial_intensity;
     for (const auto& zone : zones) {
         Tile* tile = SelectRandomTile(zone.first, zone.second);
-        tile->SetSunlight(amount);
-        PlaceSunlightSpread(tile, amount - 1, config.sunlight.spread_distance);
+        tile->SetBaseSunlight(amount);
+        tile->SetEffectiveSunlight(amount);
+        PlaceSunlightSpread(tile, amount - config.sunlight.spread_falloff,
+                            config.sunlight.spread_distance);
     }
 }
 
 void World::InitializeEnvironment() {
     InitializeSunlight();
+    UpdateSunlight();
     IntializeMoisture();
     InitializeTileFertility();
 }
 
 void World::UpdateEnvironment() {
+    UpdateSunlight();
     ApplyMorningDew();
     ApplyEvaporation();
     UpdateFertility();
@@ -759,7 +824,8 @@ void World::PrintView() {
             PrintTileView([](Tile& tile) { return tile.GetMoisture(); });
             break;
         case ViewMode::Sunlight:
-            PrintTileView([](Tile& tile) { return tile.GetSunlight(); });
+            PrintTileView(
+                [](Tile& tile) { return tile.GetEffectiveSunlight(); });
     }
 }
 
@@ -837,7 +903,13 @@ void World::PrintTileView(Callable callable) {
                 cout << setw(4) << stream.str();
                 continue;
             }
-            cout << setw(4) << tile_value;
+
+            if (view_mode == ViewMode::World) {
+                // setw() doesn't play with unicode symbols.
+                cout << "   " << tile_value;
+            } else {
+                cout << setw(4) << tile_value;
+            }
         }
         cout << endl;
     }
@@ -865,7 +937,7 @@ string World::PreferenceBar(Creature& creature) {
 
     return "   ≈ " + to_string(tile.GetMoisture()) + " / " +
            to_string(creature.GetIdealMoisture()) + "   ☀ " +
-           to_string(tile.GetSunlight()) + " / " +
+           to_string(tile.GetEffectiveSunlight()) + " / " +
            to_string(creature.GetIdealSunlight());
 }
 

@@ -18,6 +18,7 @@ class Tile {
     bool HasType(EntityType type) const;
     bool HasCreature() const;
     bool HasNutrientCluster() const;
+    bool HasStone() const;
     Entity* GetOccupant() const;
     void SetOccupant(Entity* occupant);
     void RemoveOccupant();
@@ -31,10 +32,11 @@ class Tile {
     int GetFertility() const;
     void SetFertility(int fertility);
     void AdjustFertility(int adjustment);
-    int GetSunlight() const;
-    void SetSunlight(int sunlight);
-    void SetSunlightIfGreater(int amount);
-    SunlightLevel GetSunlightLevel() const;
+    int GetBaseSunlight() const;
+    void SetBaseSunlight(int sunlight);
+    int GetEffectiveSunlight() const;
+    void SetEffectiveSunlight(int amount);
+    SunlightLevel GetEffectiveSunlightLevel() const;
     FertilityLevel GetFertilityLevel() const;
     MoistureLevel GetMoistureLevel() const;
     int GetNutrientGrowthProgress() const;
@@ -50,7 +52,8 @@ class Tile {
     Entity* occupant = nullptr;
     int moisture = 0;
     int fertility = 0;
-    int sunlight = 0;
+    int base_sunlight = 0;
+    int effective_sunlight = 0;
     int nutrient_growth_progress = 0;
 };
 

@@ -26,6 +26,8 @@ bool Tile::HasCreature() const { return HasType(CREATURE); }
 
 bool Tile::HasNutrientCluster() const { return HasType(NUTRIENT_CLUSTER); }
 
+bool Tile::HasStone() const { return HasType(STONE); }
+
 string Tile::GetSymbol() const {
     if (occupant == nullptr) {
         return ".";
@@ -57,25 +59,31 @@ void Tile::AdjustMoisture(int adjustment) {
         clamp(moisture + adjustment, config.moisture.min, config.moisture.max);
 };
 
-void Tile::SetMoisture(int moisture) { this->moisture = moisture; }
+void Tile::SetMoisture(int moisture) {
+    this->moisture = max(config.moisture.min, moisture);
+}
 
 int Tile::GetFertility() const { return fertility; }
 
-void Tile::SetFertility(int fertility) { this->fertility = fertility; }
+void Tile::SetFertility(int fertility) {
+    this->fertility = max(config.fertility.min, fertility);
+}
 
 void Tile::AdjustFertility(int adjustment) {
     fertility = clamp(fertility + adjustment, config.fertility.min,
                       config.fertility.max);
 }
 
-void Tile::SetSunlight(int sunlight) { this->sunlight = sunlight; }
+void Tile::SetBaseSunlight(int sunlight) {
+    base_sunlight = max(config.sunlight.min, sunlight);
+}
 
-int Tile::GetSunlight() const { return sunlight; }
+int Tile::GetBaseSunlight() const { return base_sunlight; }
 
-void Tile::SetSunlightIfGreater(int amount) {
-    if (amount > sunlight) {
-        sunlight = amount;
-    }
+int Tile::GetEffectiveSunlight() const { return effective_sunlight; }
+
+void Tile::SetEffectiveSunlight(int amount) {
+    effective_sunlight = max(0, amount);
 }
 
 FertilityLevel Tile::GetFertilityLevel() const {
@@ -93,10 +101,10 @@ MoistureLevel Tile::GetMoistureLevel() const {
     return MoistureLevel::Saturated;
 }
 
-SunlightLevel Tile::GetSunlightLevel() const {
-    if (sunlight <= 2) return SunlightLevel::Dark;
-    if (sunlight <= 4) return SunlightLevel::Low;
-    if (sunlight <= 6) return SunlightLevel::Moderate;
+SunlightLevel Tile::GetEffectiveSunlightLevel() const {
+    if (effective_sunlight <= 2) return SunlightLevel::Dark;
+    if (effective_sunlight <= 4) return SunlightLevel::Low;
+    if (effective_sunlight <= 6) return SunlightLevel::Moderate;
     return SunlightLevel::Bright;
 }
 

@@ -10,7 +10,6 @@ class Stone : public Entity {
     Stone(Tile* current_tile);
 
    private:
-    std::string symbol;
 };
 
 #endif

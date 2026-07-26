@@ -29,7 +29,10 @@ struct WorldConfig {
     };
 
     struct Stone {
-        int start_count = 4;
+        int start_count = 6;
+        int shade = 2;
+        int shade_spread_distance = 1;
+        int shade_spread_falloff = 1;
     };
 
     struct NutrientGrowth {
@@ -72,14 +75,17 @@ struct WorldConfig {
         int morning_dew_initial_amount = 5;
         int morning_dew_amount = 3;
         int dew_spread_distance = 3;
+        double dew_initial_retention = 0.7;  // First ring at 70%
+        double dew_retention_decay = 0.5;
     };
 
     struct Sunlight {
         int min = 0;
         int max = 10;
-        int initial_intensity = 6;
+        int initial_intensity = 7;  // orig. = 6
         int source_count = 3;
         int spread_distance = 4;
+        int spread_falloff = 1;
 
         int high_evaporation_threshold = 8;
         int moderate_evaporation_threshold = 5;

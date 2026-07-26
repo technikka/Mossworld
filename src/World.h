@@ -95,6 +95,9 @@ class World {
     void IntializeMoisture();
     void InitializeTileFertility();
     void InitializeSunlight();
+    int CalculateEffectiveSunlight(Tile& tile);
+    void UpdateSunlight();
+    void InitializeStone();
     void ApplyMorningDew();
     void ApplyEvaporation();
     void PlaceMoistureSources(int initial_amount, int sources,
@@ -103,10 +106,10 @@ class World {
                              int spread_distance);
     void PlaceMoistureSpread(Tile* tile, int amount, int spread_distance);
     void PlaceSunlightSpread(Tile* tile, int amount, int spread_distance);
+    void PlaceShadeSpread(Tile* tile, int amount, int spread_distance);
 
     template <typename Callable>
-    void ForEachTileInRing(Tile* tile, int spread_amount, int distance,
-                           Callable callable);
+    void ForEachTileInRing(Tile* tile, int distance, Callable callable);
 
     Tile* SelectRandomEmptyTile(int start_id, int end_id);
     Tile* SelectRandomTile(int start_id, int end_id);
