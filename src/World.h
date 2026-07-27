@@ -64,7 +64,6 @@ class World {
     template <typename Callable>
     void ForEachTileWithPosition(Callable callable);
 
-    int GetEntityCount(EntityType type) const;
     void createTiles();
     void PlaceEntity(EntityType entity, Tile& tile);
     void PlaceNutrientCluster(Tile& tile);

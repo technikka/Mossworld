@@ -40,19 +40,6 @@ World::World(const WorldConfig& config)
 int World::GetWidth() { return width; }
 int World::GetHeight() { return height; }
 
-int World::GetEntityCount(EntityType type) const {
-    switch (type) {
-        case CREATURE:
-            return creatures.size();
-
-        case NUTRIENT_CLUSTER:
-            return nutrient_clusters.size();
-        case STONE:
-            return stones.size();
-    }
-    return 0;
-}
-
 void World::createTiles() {
     tiles.clear();
     tiles.resize(height);
@@ -244,7 +231,8 @@ void World::InitializeStone() {
     if (stone_count == 0) {
         return;
     }
-    int zone_count = static_cast<int>(std::round(std::sqrt(stone_count)));
+    // Distribute stones to encourage natural clustering while maintaining world coverage.
+    int zone_count = static_cast<int>(round(sqrt(stone_count)));
     auto zones = GetLinearZones(zone_count);
 
     for (int zone_index = 0; zone_index < zones.size(); zone_index++) {
@@ -276,7 +264,6 @@ void World::ForEachTileInRing(Tile* tile, int distance, Callable callable) {
             if (x_offset == 0 && y_offset == 0) {
                 continue;
             }
-
             if (abs(x_offset) != distance && abs(y_offset) != distance) {
                 continue;
             }
@@ -287,7 +274,6 @@ void World::ForEachTileInRing(Tile* tile, int distance, Callable callable) {
             if (new_y < 0 || new_y >= height || new_x < 0 || new_x >= width) {
                 continue;
             }
-
             callable(tiles[new_y][new_x]);
         }
     }
@@ -336,7 +322,6 @@ void World::PlaceMoistureSource(int amount, int start_id, int end_id,
     PlaceMoistureSpread(tile, amount, spread_distance);
 }
 
-// Place by zone and config.source_count.
 void World::PlaceMoistureSources(int initial_amount, int sources,
                                  int spread_distance) {
     auto zones = GetLinearZones(sources);
@@ -1003,9 +988,9 @@ void World::PrintStatusBar() const {
     cout << "\n";
     PrintLeftMargin();
     cout << " Day: " << left << setw(5) << day << " Mosslings: " << setw(5)
-         << GetEntityCount(CREATURE) << " Nutrient Clusters: " << setw(5)
-         << GetEntityCount(NUTRIENT_CLUSTER)
-         << "Viewing: " << ModeToString(view_mode) << "\n\n";
+         << creatures.size() << " Nutrient Clusters: " << setw(5)
+         << nutrient_clusters.size() << "Viewing: " << ModeToString(view_mode)
+         << "\n\n";
 }
 
 void World::PrintCreatureBar() {
