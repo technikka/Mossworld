@@ -38,6 +38,8 @@ class World {
     void Observe();
     void RunCreatures();
     void SetViewMode(ViewMode mode);
+    void UpdateMemory();
+    void UpdateStoneMemory();
 
     // * Grid indexing:
     // * tiles[row][column]
@@ -71,6 +73,7 @@ class World {
     void InitializeCreatures();
     Entity* CreateEntity(EntityType type, Tile* tile);
     void RemoveEntity(Tile* tile);
+    std::vector<Tile*> GetAdjacentTiles(const Tile& tile);
     std::vector<Tile*> GetAdjacentOpenTiles(Tile* tile);
     Tile* SelectCreatureTile(Creature& creature);
     void MoveCreature(Creature& creature);
@@ -120,6 +123,9 @@ class World {
     int ScoreMoisture(Tile& tile, Creature& creature);
     int ScoreSunlight(Tile& tile, Creature& creature);
     int ScoreBacktracking(Tile& tile, Creature& creature);
+
+    // * Narration Helpers
+    string DescribeStone(Stone& stone);
 };
 
 #endif

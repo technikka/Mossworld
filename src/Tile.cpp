@@ -36,7 +36,7 @@ string Tile::GetSymbol() const {
     return occupant->GetSymbol();
 }
 
-Position Tile::GetPosition() {
+Position Tile::GetPosition() const {
     Position position;
     position.x = x;
     position.y = y;
@@ -99,6 +99,22 @@ MoistureLevel Tile::GetMoistureLevel() const {
     if (moisture <= 6) return MoistureLevel::Ideal;
     if (moisture <= 8) return MoistureLevel::Wet;
     return MoistureLevel::Saturated;
+}
+
+string ToString(MoistureLevel level) {
+    switch (level) {
+        case MoistureLevel::Dry:
+            return "dry";
+        case MoistureLevel::Damp:
+            return "damp";
+        case MoistureLevel::Saturated:
+            return "saturated";
+        case MoistureLevel::Ideal:
+            return "ideal";
+        case MoistureLevel::Wet:
+            return "wet";
+    }
+    return "unknown";
 }
 
 SunlightLevel Tile::GetEffectiveSunlightLevel() const {

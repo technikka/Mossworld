@@ -11,6 +11,8 @@ enum class FertilityLevel { None, Low, Moderate, High };
 enum class MoistureLevel { Dry, Damp, Ideal, Wet, Saturated };
 enum class SunlightLevel { Dark, Low, Moderate, Bright };
 
+std::string ToString(MoistureLevel level);
+
 class Tile {
    public:
     Tile(int id, int x, int y, const WorldConfig& config);
@@ -24,7 +26,7 @@ class Tile {
     void RemoveOccupant();
     bool IsEmpty() const;
     std::string GetSymbol() const;
-    Position GetPosition();
+    Position GetPosition() const;
     static Position IdToCoordinates(int tile_id, int world_width);
     int GetMoisture() const;
     void SetMoisture(int moisture);

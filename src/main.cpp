@@ -20,6 +20,7 @@ void BenchmarkSimulation(World& world) {
     for (int i = 0; i < sim_runs; i++) {
         world.BeginDay();
         world.RunCreatures();
+        world.UpdateMemory();
     }
 
     auto end = chrono::steady_clock::now();
@@ -89,6 +90,7 @@ int main(int argc, char* argv[]) {
 
         world.BeginDay();
         world.RunCreatures();
+        world.UpdateMemory();
     }
 
     return 0;

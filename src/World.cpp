@@ -9,6 +9,7 @@ using namespace std;
 #include "Creature.h"
 #include "Narration.h"
 #include "Position.h"
+#include "Stone.h"
 #include "Tile.h"
 #include "ViewMode.h"
 #include "World.h"
@@ -332,10 +333,11 @@ void World::PlaceMoistureSources(int initial_amount, int sources,
     }
 }
 
-// For Creature; NutrientCluster doesn't block openness.
-vector<Tile*> World::GetAdjacentOpenTiles(Tile* current_tile) {
+vector<Tile*> World::GetAdjacentTiles(const Tile& tile) {
+    vector<Tile*> adjacent_tiles;
     vector<Position> possible_positions;
-    Position position = current_tile->GetPosition();
+    Position position = tile.GetPosition();
+
     int x = position.x;
     int y = position.y;
 
@@ -344,14 +346,22 @@ vector<Tile*> World::GetAdjacentOpenTiles(Tile* current_tile) {
     possible_positions.push_back({x, y - 1});  // up
     possible_positions.push_back({x, y + 1});  // down
 
-    vector<Tile*> valid_tiles;
-
     for (const Position& position : possible_positions) {
         if (position.x < 0 || position.x >= width) continue;
         if (position.y < 0 || position.y >= height) continue;
 
         Tile* tile = &tiles[position.y][position.x];
+        adjacent_tiles.push_back(tile);
+    }
+    return adjacent_tiles;
+}
 
+// For Creature; NutrientCluster doesn't block openness.
+vector<Tile*> World::GetAdjacentOpenTiles(Tile* current_tile) {
+    vector<Tile*> adjacent_tiles = GetAdjacentTiles(*current_tile);
+    vector<Tile*> valid_tiles;
+
+    for (Tile* tile : adjacent_tiles) {
         if (tile->HasNutrientCluster() || tile->IsEmpty()) {
             valid_tiles.push_back(tile);
         }
@@ -377,6 +387,7 @@ int World::ScoreObjective(Tile& tile, Creature& creature) {
     return 0;
 }
 
+// Creature movement helpers.
 int World::ScoreMoisture(Tile& tile, Creature& creature) {
     int moisture_difference =
         abs(tile.GetMoisture() - creature.GetIdealMoisture());
@@ -785,6 +796,30 @@ void World::RunCreatures() {
     }
 }
 
+void World::UpdateStoneMemory() {
+    for (const auto& stone : stones) {
+        vector<Tile*> adjacent_tiles =
+            GetAdjacentTiles(*stone->GetCurrentTile());
+        for (Tile* tile : adjacent_tiles) {
+            if (tile->HasCreature()) {
+                auto* creature = static_cast<Creature*>(tile->GetOccupant());
+                int creature_id = creature->GetId();
+                stone->RecordVisit(creature_id, day);
+
+                // Create FrequentVisitor Event
+                int frequent_visitor_count = 5;
+                if (stone->GetVisitCount(creature_id) ==
+                    frequent_visitor_count) {
+                    Narration::AddEvent(Narration::FrequentVisitor(
+                        *creature, day, DescribeStone(*stone)));
+                }
+            }
+        }
+    }
+}
+
+void World::UpdateMemory() { UpdateStoneMemory(); }
+
 void World::SetViewMode(ViewMode mode) { view_mode = mode; }
 
 void World::PrintView() {
@@ -1019,3 +1054,34 @@ string World::GetTrait() {
 void World::ToggleJournal() { journal_open = !journal_open; }
 
 bool World::IsJournalOpen() const { return journal_open; }
+
+string World::DescribeStone(Stone& stone) {
+    string text = "The ";
+    Position position = stone.GetPosition();
+
+    if (position.y < height / 2)
+        text += "upper-";
+    else
+        text += "lower-";
+
+    if (position.x < width / 2)
+        text += "western ";
+    else
+        text += "eastern ";
+
+    MoistureLevel moisture = stone.GetCurrentTile()->GetMoistureLevel();
+    SunlightLevel sunlight =
+        stone.GetCurrentTile()->GetEffectiveSunlightLevel();
+
+    if (sunlight == SunlightLevel::Moderate) {
+        text.append("sunlit");
+    } else if (sunlight == SunlightLevel::Low) {
+        text.append("shaded");
+    } else if (!(moisture == MoistureLevel::Saturated) ||
+               !(moisture == MoistureLevel::Ideal)) {
+        text.append(ToString(moisture));
+    }
+
+    text.append(" stone");
+    return text;
+}
