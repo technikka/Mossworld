@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Creature.h"
+#include "Environment.h"
 #include "Narration.h"
 #include "NutrientCluster.h"
 #include "Stone.h"
@@ -14,13 +15,10 @@
 class World {
    public:
     World(const WorldConfig& config);
-    int GetWidth();
-    int GetHeight();
     void PrintView();
 
     template <typename Callable>
     void PrintTileView(Callable callable);
-
     void PrintStatusBar() const;
     void PrintCreatureBar();
     void PrintObserverMenu() const;
@@ -29,8 +27,8 @@ class World {
                       std::size_t indent) const;
     void PrintDivider() const;
     void PrintLeftMargin() const;
-    void PrintCentered(const string& text) const;
-    void PrintLine(const string& text) const;
+    void PrintCentered(const std::string& text) const;
+    void PrintLine(const std::string& text) const;
     void PrintJournal() const;
     void ToggleJournal();
     bool IsJournalOpen() const;
@@ -41,40 +39,26 @@ class World {
     void UpdateMemory();
     void UpdateStoneMemory();
 
-    // * Grid indexing:
-    // * tiles[row][column]
-    // * tiles[0] = first row
-    // * tiles[0][1] = first row, second column
-    std::vector<std::vector<Tile>> tiles;
-
+   private:
     std::vector<std::unique_ptr<Creature>> creatures;
     std::vector<std::unique_ptr<NutrientCluster>> nutrient_clusters;
     std::vector<std::unique_ptr<Stone>> stones;
     std::vector<std::string> available_traits;
 
-   private:
     const WorldConfig config;
     ViewMode view_mode;
-    bool journal_open = false;
-    int height;
-    int width;
-    int next_creature_id = 1;
     int day = 1;
+    TileMap tile_map;
+    Environment environment;
+    bool journal_open = false;
+    int next_creature_id = 1;
 
-    template <typename Callable>
-    void ForEachTile(Callable callable);
-    template <typename Callable>
-    void ForEachTileWithPosition(Callable callable);
-
-    void createTiles();
     void PlaceEntity(EntityType entity, Tile& tile);
     void PlaceNutrientCluster(Tile& tile);
     void InitializeNutrientClusters();
     void InitializeCreatures();
     Entity* CreateEntity(EntityType type, Tile* tile);
     void RemoveEntity(Tile* tile);
-    std::vector<Tile*> GetAdjacentTiles(const Tile& tile);
-    std::vector<Tile*> GetAdjacentOpenTiles(Tile* tile);
     Tile* SelectCreatureTile(Creature& creature);
     void MoveCreature(Creature& creature);
     std::string GetTrait();
@@ -89,35 +73,10 @@ class World {
     void AssessNeeds(Creature& creature);
     void SelectNutrientObjective(Creature& creature, int max_energy);
     Tile* FindNearestNutrientCluster(Creature& creature);
-    std::vector<std::pair<int, int>> GetLinearZones(int zone_count) const;
-    void UpdateEnvironment();
-    void UpdateFertility();
-    void UpdateTileFertility(Tile& tile);
-    void InitializeEnvironment();
-    void IntializeMoisture();
-    void InitializeTileFertility();
-    void InitializeSunlight();
-    int CalculateEffectiveSunlight(Tile& tile);
-    void UpdateSunlight();
     void InitializeStone();
-    void ApplyMorningDew();
-    void ApplyEvaporation();
-    void PlaceMoistureSources(int initial_amount, int sources,
-                              int spread_distance);
-    void PlaceMoistureSource(int amount, int start_id, int end_id,
-                             int spread_distance);
-    void PlaceMoistureSpread(Tile* tile, int amount, int spread_distance);
-    void PlaceSunlightSpread(Tile* tile, int amount, int spread_distance);
-    void PlaceShadeSpread(Tile* tile, int amount, int spread_distance);
-
-    template <typename Callable>
-    void ForEachTileInRing(Tile* tile, int distance, Callable callable);
-
-    Tile* SelectRandomEmptyTile(int start_id, int end_id);
-    Tile* SelectRandomTile(int start_id, int end_id);
     Tile* SelectRandomNutrientGrowthTile();
-    string EnergyBar(int energy, int max_energy);
-    string PreferenceBar(Creature& creature);
+    std::string EnergyBar(int energy, int max_energy);
+    std::string PreferenceBar(Creature& creature);
     int ScoreTile(Tile& tile, Creature& creature);
     int ScoreObjective(Tile& tile, Creature& creature);
     int ScoreMoisture(Tile& tile, Creature& creature);
@@ -125,7 +84,7 @@ class World {
     int ScoreBacktracking(Tile& tile, Creature& creature);
 
     // * Narration Helpers
-    string DescribeStone(Stone& stone);
+    std::string DescribeStone(Stone& stone);
 };
 
 #endif

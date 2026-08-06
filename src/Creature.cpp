@@ -9,14 +9,14 @@ Creature::Creature(CreatureType type, int id, Tile* current_tile, string trait,
                    const WorldConfig& config)
     : Entity(CREATURE, current_tile),
       config(config),
-      type(type),
-      id(id),
-      trait(trait),
       energy(config.creature.initial_energy),
+      id(id),
       ideal_moisture(rand() % (config.moisture.max - config.moisture.min + 1) +
                      config.moisture.min),
       ideal_sunlight(rand() % (config.sunlight.max - config.sunlight.min + 1) +
-                     config.sunlight.min) {
+                     config.sunlight.min),
+      type(type),
+      trait(trait) {
     symbol = TraitToSymbol();
     tile_history.push_back(current_tile);
 }

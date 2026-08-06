@@ -94,7 +94,7 @@ struct WorldConfig {
         int high_evaporation_modifier = 2;
         int moderate_evaporation_modifier = 1;
         int low_evaporation_modifier = 1;
-        int low_evaporation_interal = 2;  // every n days apply modifer
+        int low_evaporation_interval = 2;  // every n days apply modifer
     };
 
     Creature creature;
