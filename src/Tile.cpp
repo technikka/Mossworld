@@ -1,9 +1,10 @@
 #include <algorithm>
 #include <iostream>
-using namespace std;
 
 #include "Tile.h"
 #include "WorldConfig.h"
+
+using namespace std;
 
 Tile::Tile(int id, int x, int y, const WorldConfig& config)
     : config(config), id(id), x(x), y(y), moisture(config.moisture.min) {}
@@ -139,3 +140,7 @@ void Tile::ResetNutrientGrowthProgress() {
 bool Tile::CanGrowNutrient() {
     return nutrient_growth_progress >= config.nutrient_growth.progress_ceiling;
 }
+
+double Tile::GetElevation() const { return elevation; }
+
+void Tile::SetElevation(double elevation) { this->elevation = elevation; }

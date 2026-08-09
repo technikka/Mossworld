@@ -12,6 +12,7 @@
 #include "Narration.h"
 #include "Position.h"
 #include "Stone.h"
+#include "TerrainGenerator.h"
 #include "Tile.h"
 #include "TileMap.h"
 #include "ViewMode.h"
@@ -35,6 +36,9 @@ World::World(const WorldConfig& config)
     creatures.reserve(config.creature.start_count);
     nutrient_clusters.reserve(config.nutrient_cluster.start_count);
     stones.reserve(config.stone.start_count);
+
+    TerrainGenerator terrain_generator(config);
+    terrain_generator.Generate(tile_map);
 
     this->InitializeStone();
     this->InitializeCreatures();
@@ -548,6 +552,12 @@ void World::PrintView() {
         case ViewMode::Sunlight:
             PrintTileView(
                 [](const Tile& tile) { return tile.GetEffectiveSunlight(); });
+            break;
+        case ViewMode::Elevation:
+            PrintTileView([](const Tile& tile) {
+                return static_cast<int>(round(tile.GetElevation() * 10.0));
+            });
+            break;
     }
 }
 
@@ -633,9 +643,9 @@ void World::PrintTileView(Callable callable) {
                 cout << setw(4) << tile_value;
             }
         }
-        cout << endl;
+        cout << '\n';
     }
-    cout << endl;
+    cout << '\n' << flush;
 }
 
 string World::EnergyBar(int energy, int max_energy) {
@@ -667,7 +677,7 @@ void World::PrintObserverMenu() const {
     cout << "\n\n";
     // cout << "A new day is unfolding.\n\n";
     PrintLine("Observe ➜ Enter   Leave ➜ 'exit'");
-    PrintLine("Change View ➜ 1: ⌂ 2: ≈  3: ☀");
+    PrintLine("Change View ➜ 1: ⌂  2: ≈  3: ☀  4: ⌁ ");
     PrintLine("Open/Close Journal ➜ 'J'");
     cout << "\n";
     PrintLeftMargin();
@@ -737,8 +747,9 @@ void World::PrintCreatureBar() {
         PrintLeftMargin();
         cout << left << setw(11) << creature->GetTrait()
              << EnergyBar(creature->GetEnergy(), creature->GetMaxEnergy())
-             << PreferenceBar(*creature) << endl;
+             << PreferenceBar(*creature) << '\n';
     }
+    cout << flush;
 }
 
 string World::GetTrait() {

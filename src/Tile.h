@@ -45,6 +45,8 @@ class Tile {
     void AdjustNutrientGrowthProgress(int adjustment);
     void ResetNutrientGrowthProgress();
     bool CanGrowNutrient();
+    double GetElevation() const;
+    void SetElevation(double elevation);
 
    private:
     const WorldConfig& config;
@@ -57,6 +59,7 @@ class Tile {
     int base_sunlight = 0;
     int effective_sunlight = 0;
     int nutrient_growth_progress = 0;
+    double elevation = 0.0;
 };
 
 #endif

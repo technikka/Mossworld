@@ -77,6 +77,11 @@ int main(int argc, char* argv[]) {
                 world.Observe();
             }
 
+            if (input == "4") {
+                world.SetViewMode(ViewMode::Elevation);
+                world.Observe();
+            }
+
             if (input == "j" || input == "J") {
                 world.ToggleJournal();
                 world.Observe();

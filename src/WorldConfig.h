@@ -7,17 +7,17 @@ struct WorldConfig {
     // * World
     ViewMode view_mode = ViewMode::World;
     int left_margin = 4;
-    int width = 9;
-    int height = 9;
+    int width = 15;
+    int height = 15;
 
     struct Creature {
         int max_energy = 10;
-        int start_count = 4;
+        int start_count = 6;
         int initial_energy = 10;
     };
 
     struct NutrientCluster {
-        int start_count = 8;
+        int start_count = 12;
 
         int stress_min = 0;
         int stress_max = 10;
@@ -29,7 +29,7 @@ struct WorldConfig {
     };
 
     struct Stone {
-        int start_count = 6;
+        int start_count = 12;
         int shade = 2;
         int shade_spread_distance = 1;
         int shade_spread_falloff = 1;
@@ -71,8 +71,8 @@ struct WorldConfig {
     struct Moisture {
         int min = 0;
         int max = 10;
-        int source_count = 3;
-        int morning_dew_initial_amount = 5;
+        int source_count = 6;
+        int morning_dew_initial_amount = 3;
         int morning_dew_amount = 3;
         int dew_spread_distance = 3;
         double dew_initial_retention = 0.7;  // First ring at 70%
@@ -82,8 +82,8 @@ struct WorldConfig {
     struct Sunlight {
         int min = 0;
         int max = 10;
-        int initial_intensity = 7;  // orig. = 6
-        int source_count = 3;
+        int initial_intensity = 7;
+        int source_count = 6;
         int spread_distance = 4;
         int spread_falloff = 1;
 
@@ -97,6 +97,8 @@ struct WorldConfig {
         int low_evaporation_interval = 2;  // every n days apply modifer
     };
 
+    struct Terrain {};
+
     Creature creature;
     NutrientCluster nutrient_cluster;
     Stone stone;
@@ -104,6 +106,7 @@ struct WorldConfig {
     Fertility fertility;
     Sunlight sunlight;
     NutrientGrowth nutrient_growth;
+    Terrain terrain;
 };
 
 #endif
