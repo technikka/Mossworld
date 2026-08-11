@@ -32,7 +32,7 @@ const Tile& TileMap::GetTile(int row, int column) const {
     return tiles[row][column];
 }
 
-void TileMap::ForEachTile(const std::function<void(Tile&)>& callable) {
+void TileMap::ForEachTile(const function<void(Tile&)>& callable) {
     for (int row = 0; row < height; row++) {
         for (int column = 0; column < width; column++) {
             callable(tiles[row][column]);
@@ -41,7 +41,7 @@ void TileMap::ForEachTile(const std::function<void(Tile&)>& callable) {
 }
 
 void TileMap::ForEachTileWithPosition(
-    const std::function<void(Tile&, Position)>& callable) {
+    const function<void(Tile&, Position)>& callable) {
     for (int row = 0; row < height; ++row)
         for (int column = 0; column < width; ++column)
             callable(tiles[row][column], Position{column, row});

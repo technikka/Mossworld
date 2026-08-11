@@ -30,8 +30,8 @@ class Creature : public Entity {
     Tile* GetObjective() const;
     int GetEnergy() const;
     NutrientNeed GetNutrientNeed() const;
-    int GetIdealMoisture();
-    int GetIdealSunlight();
+    double GetIdealMoisture();
+    double GetIdealSunlight();
 
     // * Setters
     void SetObjective(Tile* tile);
@@ -46,8 +46,8 @@ class Creature : public Entity {
     const WorldConfig& config;
     int energy;
     int id;
-    int ideal_moisture;
-    int ideal_sunlight;
+    double ideal_moisture;
+    double ideal_sunlight;
     CreatureType type;
     std::string trait;
     // more than one creature can share an objective

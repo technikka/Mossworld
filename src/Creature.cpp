@@ -1,9 +1,14 @@
 #include <iostream>
-using namespace std;
 
 #include "Creature.h"
 #include "Position.h"
 #include "WorldConfig.h"
+
+using namespace std;
+
+double RandomDouble(double min, double max) {
+    return min + static_cast<double>(rand()) / RAND_MAX * (max - min);
+}
 
 Creature::Creature(CreatureType type, int id, Tile* current_tile, string trait,
                    const WorldConfig& config)
@@ -11,14 +16,14 @@ Creature::Creature(CreatureType type, int id, Tile* current_tile, string trait,
       config(config),
       energy(config.creature.initial_energy),
       id(id),
-      ideal_moisture(rand() % (config.moisture.max - config.moisture.min + 1) +
-                     config.moisture.min),
-      ideal_sunlight(rand() % (config.sunlight.max - config.sunlight.min + 1) +
-                     config.sunlight.min),
       type(type),
       trait(trait) {
     symbol = TraitToSymbol();
     tile_history.push_back(current_tile);
+    {
+        ideal_moisture = RandomDouble(config.moisture.min, config.moisture.max);
+        ideal_sunlight = RandomDouble(config.sunlight.min, config.sunlight.max);
+    }
 }
 
 string Creature::TraitToSymbol() const {
@@ -77,6 +82,6 @@ bool Creature::HasObjective() const {
     return false;
 }
 
-int Creature::GetIdealMoisture() { return ideal_moisture; }
+double Creature::GetIdealMoisture() { return ideal_moisture; }
 
-int Creature::GetIdealSunlight() { return ideal_sunlight; }
+double Creature::GetIdealSunlight() { return ideal_sunlight; }

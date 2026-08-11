@@ -41,6 +41,7 @@ World::World(const WorldConfig& config)
     terrain_generator.Generate(tile_map);
 
     this->InitializeStone();
+    environment.Initialize();
     this->InitializeCreatures();
     this->InitializeNutrientClusters();
 }
@@ -177,7 +178,8 @@ void World::InitializeStone() {
             stones_for_zone++;
         }
         for (int i = 0; i < stones_for_zone; i++) {
-            Tile* tile = tile_map.SelectRandomTile(zone.first, zone.second);
+            Tile* tile =
+                tile_map.SelectRandomEmptyTile(zone.first, zone.second);
             if (tile == nullptr) {
                 return;
             }
@@ -208,18 +210,18 @@ int World::ScoreObjective(Tile& tile, Creature& creature) {
 }
 
 // Creature movement helpers.
-int World::ScoreMoisture(Tile& tile, Creature& creature) {
-    int moisture_difference =
+double World::ScoreMoisture(Tile& tile, Creature& creature) {
+    double moisture_difference =
         abs(tile.GetMoisture() - creature.GetIdealMoisture());
 
-    return 10 - moisture_difference;
+    return 10.0 - moisture_difference;
 }
 
-int World::ScoreSunlight(Tile& tile, Creature& creature) {
-    int sunlight_difference =
+double World::ScoreSunlight(Tile& tile, Creature& creature) {
+    double sunlight_difference =
         abs(tile.GetEffectiveSunlight() - creature.GetIdealSunlight());
 
-    return 10 - sunlight_difference;
+    return 10.0 - sunlight_difference;
 }
 
 int World::ScoreBacktracking(Tile& tile, Creature& creature) {
@@ -233,8 +235,8 @@ int World::ScoreBacktracking(Tile& tile, Creature& creature) {
     return 0;
 }
 
-int World::ScoreTile(Tile& tile, Creature& creature) {
-    int score = 0;
+double World::ScoreTile(Tile& tile, Creature& creature) {
+    double score = 0;
 
     if (creature.HasObjective()) {
         score += ScoreObjective(tile, creature);
@@ -260,13 +262,13 @@ Tile* World::SelectCreatureTile(Creature& creature) {
 
     struct TileScore {
         Tile* tile;
-        int score;
+        double score;
     };
 
     vector<TileScore> tile_scores;
     Tile* highest_scoring_tile = valid_tiles.front();
     // Double scores first tile for now.
-    int highest_score = ScoreTile(*highest_scoring_tile, creature);
+    double highest_score = ScoreTile(*highest_scoring_tile, creature);
 
     // Score each valid tile based on creature needs & preferences.
     for (auto& tile : valid_tiles) {
@@ -547,15 +549,23 @@ void World::PrintView() {
             PrintTileView([](const Tile& tile) { return tile.GetSymbol(); });
             break;
         case ViewMode::Moisture:
-            PrintTileView([](const Tile& tile) { return tile.GetMoisture(); });
+            PrintTileView([](const Tile& tile) {
+                return static_cast<int>(tile.GetMoisture());
+            });
             break;
         case ViewMode::Sunlight:
-            PrintTileView(
-                [](const Tile& tile) { return tile.GetEffectiveSunlight(); });
+            PrintTileView([](const Tile& tile) {
+                return static_cast<int>(round(tile.GetEffectiveSunlight()));
+            });
             break;
         case ViewMode::Elevation:
             PrintTileView([](const Tile& tile) {
                 return static_cast<int>(round(tile.GetElevation() * 10.0));
+            });
+            break;
+        case ViewMode::CanopyCover:
+            PrintTileView([](const Tile& tile) {
+                return static_cast<int>(round(tile.GetCanopyCover() * 10.0));
             });
             break;
     }
@@ -667,17 +677,17 @@ string World::EnergyBar(int energy, int max_energy) {
 string World::PreferenceBar(Creature& creature) {
     Tile& tile = *creature.GetCurrentTile();
 
-    return "   ≈ " + to_string(tile.GetMoisture()) + " / " +
-           to_string(creature.GetIdealMoisture()) + "   ☀ " +
-           to_string(tile.GetEffectiveSunlight()) + " / " +
-           to_string(creature.GetIdealSunlight());
+    return "   ≈ " + to_string(static_cast<int>(tile.GetMoisture())) + " / " +
+           to_string(static_cast<int>(creature.GetIdealMoisture())) + "   ☀ " +
+           to_string(static_cast<int>(round(tile.GetEffectiveSunlight()))) +
+           " / " + to_string(static_cast<int>(creature.GetIdealSunlight()));
 }
 
 void World::PrintObserverMenu() const {
     cout << "\n\n";
     // cout << "A new day is unfolding.\n\n";
     PrintLine("Observe ➜ Enter   Leave ➜ 'exit'");
-    PrintLine("Change View ➜ 1: ⌂  2: ≈  3: ☀  4: ⌁ ");
+    PrintLine("Change View ➜ 1: ⌂  2: ≈  3: ☀  4: ⌁  5:  ♣  ");
     PrintLine("Open/Close Journal ➜ 'J'");
     cout << "\n";
     PrintLeftMargin();

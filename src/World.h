@@ -77,10 +77,10 @@ class World {
     Tile* SelectRandomNutrientGrowthTile();
     std::string EnergyBar(int energy, int max_energy);
     std::string PreferenceBar(Creature& creature);
-    int ScoreTile(Tile& tile, Creature& creature);
+    double ScoreTile(Tile& tile, Creature& creature);
     int ScoreObjective(Tile& tile, Creature& creature);
-    int ScoreMoisture(Tile& tile, Creature& creature);
-    int ScoreSunlight(Tile& tile, Creature& creature);
+    double ScoreMoisture(Tile& tile, Creature& creature);
+    double ScoreSunlight(Tile& tile, Creature& creature);
     int ScoreBacktracking(Tile& tile, Creature& creature);
 
     // * Narration Helpers

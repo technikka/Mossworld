@@ -82,6 +82,11 @@ int main(int argc, char* argv[]) {
                 world.Observe();
             }
 
+            if (input == "5") {
+                world.SetViewMode(ViewMode::CanopyCover);
+                world.Observe();
+            }
+
             if (input == "j" || input == "J") {
                 world.ToggleJournal();
                 world.Observe();

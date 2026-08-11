@@ -28,16 +28,15 @@ class Tile {
     std::string GetSymbol() const;
     Position GetPosition() const;
     static Position IdToCoordinates(int tile_id, int world_width);
-    int GetMoisture() const;
-    void SetMoisture(int moisture);
-    void AdjustMoisture(int amount);
-    int GetFertility() const;
-    void SetFertility(int fertility);
-    void AdjustFertility(int adjustment);
-    int GetBaseSunlight() const;
-    void SetBaseSunlight(int sunlight);
-    int GetEffectiveSunlight() const;
-    void SetEffectiveSunlight(int amount);
+    double GetMoisture() const;
+    void AdjustMoisture(double amount);
+    double GetFertility() const;
+    void SetFertility(double fertility);
+    void AdjustFertility(double adjustment);
+    double GetBaseSunlight() const;
+    void SetBaseSunlight(double sunlight);
+    double GetEffectiveSunlight() const;
+    void SetEffectiveSunlight(double amount);
     SunlightLevel GetEffectiveSunlightLevel() const;
     FertilityLevel GetFertilityLevel() const;
     MoistureLevel GetMoistureLevel() const;
@@ -47,6 +46,8 @@ class Tile {
     bool CanGrowNutrient();
     double GetElevation() const;
     void SetElevation(double elevation);
+    double GetCanopyCover() const;
+    void SetCanopyCover(double density);
 
    private:
     const WorldConfig& config;
@@ -54,12 +55,13 @@ class Tile {
     int x;
     int y;
     Entity* occupant = nullptr;
-    int moisture = 0;
-    int fertility = 0;
-    int base_sunlight = 0;
-    int effective_sunlight = 0;
+    double moisture = 0;
+    double fertility = 0;
+    double base_sunlight = 0.0;
+    double effective_sunlight = 0.0;
     int nutrient_growth_progress = 0;
     double elevation = 0.0;
+    double canopy_cover = 0.0;
 };
 
 #endif

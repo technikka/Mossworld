@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include "Tile.h"
@@ -53,52 +54,48 @@ Position Tile::IdToCoordinates(int tile_id, int world_width) {
     return position;
 }
 
-int Tile::GetMoisture() const { return moisture; };
+double Tile::GetMoisture() const { return moisture; };
 
-void Tile::AdjustMoisture(int adjustment) {
+void Tile::AdjustMoisture(double adjustment) {
     moisture =
         clamp(moisture + adjustment, config.moisture.min, config.moisture.max);
 };
 
-void Tile::SetMoisture(int moisture) {
-    this->moisture = max(config.moisture.min, moisture);
-}
+double Tile::GetFertility() const { return fertility; }
 
-int Tile::GetFertility() const { return fertility; }
-
-void Tile::SetFertility(int fertility) {
+void Tile::SetFertility(double fertility) {
     this->fertility = max(config.fertility.min, fertility);
 }
 
-void Tile::AdjustFertility(int adjustment) {
+void Tile::AdjustFertility(double adjustment) {
     fertility = clamp(fertility + adjustment, config.fertility.min,
                       config.fertility.max);
 }
 
-void Tile::SetBaseSunlight(int sunlight) {
+void Tile::SetBaseSunlight(double sunlight) {
     base_sunlight = max(config.sunlight.min, sunlight);
 }
 
-int Tile::GetBaseSunlight() const { return base_sunlight; }
+double Tile::GetBaseSunlight() const { return base_sunlight; }
 
-int Tile::GetEffectiveSunlight() const { return effective_sunlight; }
+double Tile::GetEffectiveSunlight() const { return effective_sunlight; }
 
-void Tile::SetEffectiveSunlight(int amount) {
-    effective_sunlight = max(0, amount);
+void Tile::SetEffectiveSunlight(double amount) {
+    effective_sunlight = max(0.0, amount);
 }
 
 FertilityLevel Tile::GetFertilityLevel() const {
-    if (fertility == 0) return FertilityLevel::None;
-    if (fertility <= 4) return FertilityLevel::Low;
-    if (fertility <= 7) return FertilityLevel::Moderate;
+    if (fertility == 0.0) return FertilityLevel::None;
+    if (fertility <= 4.0) return FertilityLevel::Low;
+    if (fertility <= 7.0) return FertilityLevel::Moderate;
     return FertilityLevel::High;
 }
 
 MoistureLevel Tile::GetMoistureLevel() const {
-    if (moisture <= 2) return MoistureLevel::Dry;
-    if (moisture <= 4) return MoistureLevel::Damp;
-    if (moisture <= 6) return MoistureLevel::Ideal;
-    if (moisture <= 8) return MoistureLevel::Wet;
+    if (moisture <= 2.0) return MoistureLevel::Dry;
+    if (moisture <= 4.0) return MoistureLevel::Damp;
+    if (moisture <= 6.0) return MoistureLevel::Ideal;
+    if (moisture <= 8.0) return MoistureLevel::Wet;
     return MoistureLevel::Saturated;
 }
 
@@ -119,9 +116,9 @@ string ToString(MoistureLevel level) {
 }
 
 SunlightLevel Tile::GetEffectiveSunlightLevel() const {
-    if (effective_sunlight <= 2) return SunlightLevel::Dark;
-    if (effective_sunlight <= 4) return SunlightLevel::Low;
-    if (effective_sunlight <= 6) return SunlightLevel::Moderate;
+    if (effective_sunlight <= 2.0) return SunlightLevel::Dark;
+    if (effective_sunlight <= 4.0) return SunlightLevel::Low;
+    if (effective_sunlight <= 6.0) return SunlightLevel::Moderate;
     return SunlightLevel::Bright;
 }
 
@@ -144,3 +141,7 @@ bool Tile::CanGrowNutrient() {
 double Tile::GetElevation() const { return elevation; }
 
 void Tile::SetElevation(double elevation) { this->elevation = elevation; }
+
+double Tile::GetCanopyCover() const { return canopy_cover; }
+
+void Tile::SetCanopyCover(double density) { canopy_cover = density; }

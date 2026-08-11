@@ -13,4 +13,7 @@ class TerrainGenerator {
    private:
     const WorldConfig& config;
     siv::PerlinNoise perlin;
+    void SeedPerlin();
+    void GenerateNoiseField(TileMap& tile_map, double noise_scale,
+                            const std::function<void(Tile&, double)>& callable);
 };

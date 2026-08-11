@@ -56,48 +56,40 @@ struct WorldConfig {
     };
 
     struct Fertility {
-        int min = 0;
-        int max = 10;
-        int initial_low = 3;
-        int initial_high = 9;
-
-        int dry_moisture_modifier = -1;
-        int saturated_moisture_modifier = -1;
-        int ideal_moisture_modifier = 1;
-
-        int nutrient_depletion_modifier = -1;
+        double min = 0;
+        double max = 10;
+        double initial_low = 3;
+        double initial_high = 9;
+        double dry_moisture_modifier = -1;
+        double saturated_moisture_modifier = -1;
+        double ideal_moisture_modifier = 1;
+        double nutrient_depletion_modifier = -1;
     };
 
     struct Moisture {
-        int min = 0;
-        int max = 10;
+        double min = 0;
+        double max = 10;
         int source_count = 6;
-        int morning_dew_initial_amount = 3;
-        int morning_dew_amount = 3;
+        double morning_dew_initial_amount = 3;
+        double morning_dew_amount = 3;
         int dew_spread_distance = 3;
         double dew_initial_retention = 0.7;  // First ring at 70%
         double dew_retention_decay = 0.5;
     };
 
     struct Sunlight {
-        int min = 0;
-        int max = 10;
-        int initial_intensity = 7;
-        int source_count = 6;
-        int spread_distance = 4;
-        int spread_falloff = 1;
+        double min = 0.0;
+        double max = 10.0;
 
-        int high_evaporation_threshold = 8;
-        int moderate_evaporation_threshold = 5;
-        int low_evaporation_threshold = 3;
+        double high_evaporation_threshold = 8;
+        double moderate_evaporation_threshold = 5;
+        double low_evaporation_threshold = 3;
 
-        int high_evaporation_modifier = 2;
-        int moderate_evaporation_modifier = 1;
-        int low_evaporation_modifier = 1;
+        double high_evaporation_modifier = 2;
+        double moderate_evaporation_modifier = 1;
+        double low_evaporation_modifier = 1;
         int low_evaporation_interval = 2;  // every n days apply modifer
     };
-
-    struct Terrain {};
 
     Creature creature;
     NutrientCluster nutrient_cluster;
@@ -106,7 +98,6 @@ struct WorldConfig {
     Fertility fertility;
     Sunlight sunlight;
     NutrientGrowth nutrient_growth;
-    Terrain terrain;
 };
 
 #endif

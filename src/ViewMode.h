@@ -4,7 +4,14 @@
 #include <string>
 
 // Inspector for development use.
-enum class ViewMode { Inspector, World, Moisture, Sunlight, Elevation };
+enum class ViewMode {
+    Inspector,
+    World,
+    Moisture,
+    Sunlight,
+    Elevation,
+    CanopyCover
+};
 
 inline std::string ModeToString(ViewMode mode) {
     switch (mode) {
@@ -16,6 +23,8 @@ inline std::string ModeToString(ViewMode mode) {
             return "Sunlight";
         case ViewMode::Elevation:
             return "Elevation";
+        case ViewMode::CanopyCover:
+            return "Canopy";
         default:
             return "Unknown";
     }
