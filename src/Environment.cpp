@@ -44,7 +44,6 @@ void Environment::PlaceShadeSpread(Tile* tile, double amount,
                 ring_tile.SetEffectiveSunlight(shade);
             }
         });
-        amount -= config.stone.shade_spread_falloff;
     }
 }
 
@@ -65,20 +64,11 @@ void Environment::PlaceMoistureSources(double initial_amount, int sources,
     }
 }
 
-double Environment::CalculateEffectiveSunlight(Tile& tile) {
-    double sunlight = tile.GetBaseSunlight();
-    sunlight -= config.stone.shade;
-    return sunlight;
-}
-
 void Environment::UpdateSunlight() {
     tile_map.ForEachTile([this](Tile& tile) {
         if (tile.HasStone()) {
-            double sunlight = CalculateEffectiveSunlight(tile);
-            tile.SetEffectiveSunlight(sunlight);
-            PlaceShadeSpread(
-                &tile, config.stone.shade - config.stone.shade_spread_falloff,
-                config.stone.shade_spread_distance);
+            PlaceShadeSpread(&tile, config.stone.shade,
+                             config.stone.shade_spread_distance);
         }
     });
 }

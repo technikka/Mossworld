@@ -30,9 +30,8 @@ struct WorldConfig {
 
     struct Stone {
         int start_count = 12;
-        int shade = 2;
+        int shade = 1;
         int shade_spread_distance = 1;
-        int shade_spread_falloff = 1;
     };
 
     struct NutrientGrowth {

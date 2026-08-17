@@ -33,8 +33,6 @@ class Environment {
     // * Sunlight
     void InitializeSunlight();
     void UpdateSunlight();
-    double CalculateEffectiveSunlight(Tile& tile);
-
     void PlaceShadeSpread(Tile* tile, double amount, int spread_distance);
 };
 
