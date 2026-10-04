@@ -812,3 +812,74 @@ string World::DescribeStone(Stone& stone) {
     text.append(" stone");
     return text;
 }
+
+CreatureSnapshot World::CreateCreatureSnapshot(Creature& creature) const {
+    CreatureSnapshot snapshot;
+    snapshot.energy = creature.GetEnergy();
+    snapshot.id = creature.GetId();
+    snapshot.ideal_moisture = creature.GetIdealMoisture();
+    snapshot.ideal_sunlight = creature.GetIdealSunlight();
+    snapshot.objective_position = creature.GetObjective()->GetPosition();
+    snapshot.position = creature.GetPosition();
+    snapshot.type = creature.GetType();
+
+    return snapshot;
+}
+
+NutrientClusterSnapshot World::CreateNutrientClusterSnapshot(
+    NutrientCluster& cluster) const {
+    NutrientClusterSnapshot snapshot;
+    snapshot.position = cluster.GetPosition();
+    snapshot.stress = cluster.GetStress();
+
+    return snapshot;
+}
+
+StoneSnapshot World::CreateStoneSnapshot(Stone& stone) const {
+    StoneSnapshot snapshot;
+    snapshot.position = stone.GetPosition();
+
+    return snapshot;
+}
+
+TileSnapshot World::CreateTileSnapshot(Tile& tile) const {
+    TileSnapshot snapshot;
+    snapshot.position = tile.GetPosition();
+    snapshot.base_sunlight = tile.GetBaseSunlight();
+    snapshot.canopy_cover = tile.GetCanopyCover();
+    snapshot.effective_sunlight = tile.GetEffectiveSunlight();
+    snapshot.elevation = tile.GetElevation();
+    snapshot.fertility = tile.GetFertility();
+    snapshot.moisture = tile.GetMoisture();
+    snapshot.moss_cover = tile.GetMossCover();
+    snapshot.nutrient_growth_progress = tile.GetNutrientGrowthProgress();
+
+    return snapshot;
+}
+
+WorldSnapshot World::CreateSnapshot() {
+    WorldSnapshot snapshot;
+
+    // Create Creature snapshots
+    for (auto& creature : creatures) {
+        snapshot.creatures.push_back(CreateCreatureSnapshot(*creature));
+    }
+
+    // Create Nutrient Cluster snapshots
+    for (auto& cluster : nutrient_clusters) {
+        snapshot.nutrient_clusters.push_back(
+            CreateNutrientClusterSnapshot(*cluster));
+    }
+
+    // Create Stone snapshots
+    for (auto& stone : stones) {
+        snapshot.stones.push_back(CreateStoneSnapshot(*stone));
+    }
+
+    // Get Tile snapshots
+    tile_map.ForEachTile([&](Tile& tile) {
+        snapshot.tiles.push_back(CreateTileSnapshot(tile));
+    });
+
+    return snapshot;
+}

@@ -11,6 +11,7 @@
 #include "Stone.h"
 #include "Tile.h"
 #include "WorldConfig.h"
+#include "WorldSnapshot.h"
 
 class World {
    public:
@@ -38,6 +39,12 @@ class World {
     void SetViewMode(ViewMode mode);
     void UpdateMemory();
     void UpdateStoneMemory();
+    CreatureSnapshot CreateCreatureSnapshot(Creature& creature) const;
+    NutrientClusterSnapshot CreateNutrientClusterSnapshot(
+        NutrientCluster& cluster) const;
+    StoneSnapshot CreateStoneSnapshot(Stone& stone) const;
+    TileSnapshot CreateTileSnapshot(Tile& tile) const;
+    WorldSnapshot CreateSnapshot();
 
    private:
     std::vector<std::unique_ptr<Creature>> creatures;
