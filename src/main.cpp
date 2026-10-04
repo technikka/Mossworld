@@ -87,6 +87,11 @@ int main(int argc, char* argv[]) {
                 world.Observe();
             }
 
+            if (input == "6") {
+                world.SetViewMode(ViewMode::Moss);
+                world.Observe();
+            }
+
             if (input == "j" || input == "J") {
                 world.ToggleJournal();
                 world.Observe();

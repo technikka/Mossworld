@@ -11,8 +11,9 @@ Environment::Environment(TileMap& tile_map, const WorldConfig& config,
 void Environment::Initialize() {
     InitializeSunlight();
     UpdateSunlight();
-    IntializeMoisture();
+    InitializeMoisture();
     InitializeTileFertility();
+    InitializeMoss();
 }
 
 void Environment::Update() {
@@ -20,6 +21,7 @@ void Environment::Update() {
     ApplyMorningDew();
     ApplyEvaporation();
     UpdateFertility();
+    UpdateMoss();
 }
 
 void Environment::PlaceMoistureSpread(Tile* tile, double amount,
@@ -123,7 +125,7 @@ void Environment::UpdateFertility() {
     tile_map.ForEachTile([this](Tile& tile) { UpdateTileFertility(tile); });
 }
 
-void Environment::IntializeMoisture() {
+void Environment::InitializeMoisture() {
     PlaceMoistureSources(config.moisture.morning_dew_initial_amount,
                          config.moisture.source_count,
                          config.moisture.dew_spread_distance);
@@ -151,5 +153,52 @@ void Environment::InitializeSunlight() {
         double sunlight = (1.0 - canopy_cover) * 10;
         tile.SetBaseSunlight(sunlight);
         tile.SetEffectiveSunlight(sunlight);
+    });
+}
+
+void Environment::InitializeMoss() {
+    tile_map.ForEachTile([this](Tile& tile) {
+        SunlightLevel sunlight = tile.GetEffectiveSunlightLevel();
+        MoistureLevel moisture = tile.GetMoistureLevel();
+
+        if (moisture >= MoistureLevel::Ideal &&
+            sunlight <= SunlightLevel::Low) {
+            tile.SetMossCover(9.0);
+        } else if (moisture >= MoistureLevel::Damp &&
+                   sunlight <= SunlightLevel::Low) {
+            tile.SetMossCover(7.0);
+        } else if (moisture >= MoistureLevel::Damp &&
+                   sunlight <= SunlightLevel::Moderate) {
+            tile.SetMossCover(4.0);
+        } else {
+            tile.SetMossCover(config.moss_cover.min);
+        }
+    });
+}
+
+double Environment::CalculateMossGrowth(const Tile& tile) const {
+    SunlightLevel sunlight = tile.GetEffectiveSunlightLevel();
+    MoistureLevel moisture = tile.GetMoistureLevel();
+
+    if (moisture >= MoistureLevel::Ideal && sunlight <= SunlightLevel::Low) {
+        return config.moss_cover.optimal_growth_modifier;
+    }
+
+    if (moisture >= MoistureLevel::Damp && sunlight <= SunlightLevel::Low) {
+        return config.moss_cover.favorable_growth_modifier;
+    }
+
+    if (moisture >= MoistureLevel::Damp &&
+        sunlight <= SunlightLevel::Moderate) {
+        return config.moss_cover.marginal_growth_modifier;
+    }
+
+    return config.moss_cover.stressed_growth_modifier;
+}
+
+void Environment::UpdateMoss() {
+    tile_map.ForEachTile([this](Tile& tile) {
+        double growth = CalculateMossGrowth(tile);
+        tile.AdjustMossCover(growth);
     });
 }

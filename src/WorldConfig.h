@@ -90,12 +90,23 @@ struct WorldConfig {
         int low_evaporation_interval = 2;  // every n days apply modifer
     };
 
+    struct MossCover {
+        double min = 0.0;
+        double max = 10.0;
+
+        double optimal_growth_modifier = 2.0;
+        double favorable_growth_modifier = 1.0;
+        double marginal_growth_modifier = 0.0;  // TODO: implement slow growth
+        double stressed_growth_modifier = -1.0;
+    };
+
     Creature creature;
     NutrientCluster nutrient_cluster;
     Stone stone;
     Moisture moisture;
     Fertility fertility;
     Sunlight sunlight;
+    MossCover moss_cover;
     NutrientGrowth nutrient_growth;
 };
 

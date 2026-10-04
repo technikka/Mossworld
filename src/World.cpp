@@ -568,6 +568,10 @@ void World::PrintView() {
                 return static_cast<int>(round(tile.GetCanopyCover() * 10.0));
             });
             break;
+        case ViewMode::Moss:
+            PrintTileView([](const Tile& tile) {
+                return static_cast<int>(round(tile.GetMossCover()));
+            });
     }
 }
 
@@ -687,7 +691,7 @@ void World::PrintObserverMenu() const {
     cout << "\n\n";
     // cout << "A new day is unfolding.\n\n";
     PrintLine("Observe ➜ Enter   Leave ➜ 'exit'");
-    PrintLine("Change View ➜ 1: ⌂  2: ≈  3: ☀  4: ⌁  5:  ♣  ");
+    PrintLine("Change View ➜ 1: ⌂ 2: ≈ 3: ☀ 4: ⌁ 5: ♣ 6: ⁕");
     PrintLine("Open/Close Journal ➜ 'J'");
     cout << "\n";
     PrintLeftMargin();

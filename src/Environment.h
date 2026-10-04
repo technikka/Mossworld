@@ -21,7 +21,7 @@ class Environment {
     void UpdateTileFertility(Tile& tile);
 
     // * Moisure
-    void IntializeMoisture();
+    void InitializeMoisture();
     void ApplyMorningDew();
     void ApplyEvaporation();
     void PlaceMoistureSources(double initial_amount, int sources,
@@ -34,6 +34,11 @@ class Environment {
     void InitializeSunlight();
     void UpdateSunlight();
     void PlaceShadeSpread(Tile* tile, double amount, int spread_distance);
+
+    // * Moss
+    void InitializeMoss();
+    void UpdateMoss();
+    double CalculateMossGrowth(const Tile& tile) const;
 };
 
 #endif

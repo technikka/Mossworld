@@ -27,9 +27,11 @@ void TerrainGenerator::GenerateNoiseField(
 
 void TerrainGenerator::Generate(TileMap& tile_map) {
     double noise_scale = 0.1;
+    // Generate Elevation
     GenerateNoiseField(tile_map, noise_scale, [](Tile& tile, double noise) {
         tile.SetElevation(noise);
     });
+    // Generate Canopy
     GenerateNoiseField(tile_map, noise_scale, [](Tile& tile, double noise) {
         tile.SetCanopyCover(noise);
     });

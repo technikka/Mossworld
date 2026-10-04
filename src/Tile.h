@@ -10,6 +10,19 @@ struct WorldConfig;
 enum class FertilityLevel { None, Low, Moderate, High };
 enum class MoistureLevel { Dry, Damp, Ideal, Wet, Saturated };
 enum class SunlightLevel { Dark, Low, Moderate, Bright };
+enum class MossCoverLevel { None, Sparse, Patchy, Dense };
+
+constexpr auto operator<=>(SunlightLevel lhs, SunlightLevel rhs) {
+    return static_cast<int>(lhs) <=> static_cast<int>(rhs);
+}
+
+constexpr auto operator<=>(MoistureLevel lhs, MoistureLevel rhs) {
+    return static_cast<int>(lhs) <=> static_cast<int>(rhs);
+}
+
+constexpr auto operator<=>(FertilityLevel lhs, FertilityLevel rhs) {
+    return static_cast<int>(lhs) <=> static_cast<int>(rhs);
+}
 
 std::string ToString(MoistureLevel level);
 
@@ -40,6 +53,7 @@ class Tile {
     SunlightLevel GetEffectiveSunlightLevel() const;
     FertilityLevel GetFertilityLevel() const;
     MoistureLevel GetMoistureLevel() const;
+    MossCoverLevel GetMossCoverLevel() const;
     int GetNutrientGrowthProgress() const;
     void AdjustNutrientGrowthProgress(int adjustment);
     void ResetNutrientGrowthProgress();
@@ -48,6 +62,9 @@ class Tile {
     void SetElevation(double elevation);
     double GetCanopyCover() const;
     void SetCanopyCover(double density);
+    double GetMossCover() const;
+    void SetMossCover(double density);
+    void AdjustMossCover(double adjustment);
 
    private:
     const WorldConfig& config;
@@ -55,13 +72,14 @@ class Tile {
     int x;
     int y;
     Entity* occupant = nullptr;
-    double moisture = 0;
-    double fertility = 0;
+    double moisture = 0.0;
+    double fertility = 0.0;
     double base_sunlight = 0.0;
     double effective_sunlight = 0.0;
     int nutrient_growth_progress = 0;
     double elevation = 0.0;
     double canopy_cover = 0.0;
+    double moss_cover = 0.0;
 };
 
 #endif

@@ -10,7 +10,8 @@ enum class ViewMode {
     Moisture,
     Sunlight,
     Elevation,
-    CanopyCover
+    CanopyCover,
+    Moss
 };
 
 inline std::string ModeToString(ViewMode mode) {
@@ -25,6 +26,8 @@ inline std::string ModeToString(ViewMode mode) {
             return "Elevation";
         case ViewMode::CanopyCover:
             return "Canopy";
+        case ViewMode::Moss:
+            return "Moss";
         default:
             return "Unknown";
     }

@@ -99,6 +99,20 @@ MoistureLevel Tile::GetMoistureLevel() const {
     return MoistureLevel::Saturated;
 }
 
+SunlightLevel Tile::GetEffectiveSunlightLevel() const {
+    if (effective_sunlight <= 2.0) return SunlightLevel::Dark;
+    if (effective_sunlight <= 4.0) return SunlightLevel::Low;
+    if (effective_sunlight <= 6.0) return SunlightLevel::Moderate;
+    return SunlightLevel::Bright;
+}
+
+MossCoverLevel Tile::GetMossCoverLevel() const {
+    if (moss_cover == 0.0) return MossCoverLevel::None;
+    if (moss_cover <= 3.0) return MossCoverLevel::Sparse;
+    if (moss_cover <= 6.0) return MossCoverLevel::Patchy;
+    return MossCoverLevel::Dense;
+}
+
 string ToString(MoistureLevel level) {
     switch (level) {
         case MoistureLevel::Dry:
@@ -113,13 +127,6 @@ string ToString(MoistureLevel level) {
             return "wet";
     }
     return "unknown";
-}
-
-SunlightLevel Tile::GetEffectiveSunlightLevel() const {
-    if (effective_sunlight <= 2.0) return SunlightLevel::Dark;
-    if (effective_sunlight <= 4.0) return SunlightLevel::Low;
-    if (effective_sunlight <= 6.0) return SunlightLevel::Moderate;
-    return SunlightLevel::Bright;
 }
 
 int Tile::GetNutrientGrowthProgress() const { return nutrient_growth_progress; }
@@ -145,3 +152,12 @@ void Tile::SetElevation(double elevation) { this->elevation = elevation; }
 double Tile::GetCanopyCover() const { return canopy_cover; }
 
 void Tile::SetCanopyCover(double density) { canopy_cover = density; }
+
+double Tile::GetMossCover() const { return moss_cover; }
+
+void Tile::SetMossCover(double density) { moss_cover = density; }
+
+void Tile::AdjustMossCover(double adjustment) {
+    moss_cover = clamp(moss_cover + adjustment, config.moss_cover.min,
+                       config.moss_cover.max);
+}
