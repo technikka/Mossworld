@@ -43,10 +43,11 @@ Mossworld is in active development and currently includes:
 * A persistent tile-based world simulation with switchable environmental observation views
 * A flexible tile scoring system that supports increasingly sophisticated creature decision-making
 * Procedural placement of creatures and environmental resources
-* Environmental features that create local ecological variation throughout the world
+* Procedurally generated terrain and canopy cover that create spatially coherent ecological variation throughout the world
 * Dynamic nutrient clusters that grow and decay in response to local environmental conditions
 * A persistent moisture system shaped by morning dew, sunlight, and local environmental conditions
 * A sunlight system with natural gradients, local shade, and interactions that influence the surrounding ecosystem
+* A dynamic moss cover system that grows and recedes in response to local moisture and sunlight conditions
 * Tile fertility that changes over time in response to moisture and ecological activity
 * Autonomous Mosslings with energy needs, environmental preferences, and goal-directed behavior
 * Nature-inspired narration that reflects the evolving state of the ecosystem
