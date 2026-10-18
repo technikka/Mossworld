@@ -2,6 +2,7 @@
 #include <chrono>
 #include <cstdlib>  // for rand()
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -10,6 +11,7 @@ using namespace std;  // needs to be above header files
 #include "Creature.h"
 #include "Narration.h"
 #include "World.h"
+#include "observation/WorldSnapshotSerializer.h"
 
 void BenchmarkSimulation(World& world) {
     int sim_runs = 1000;
@@ -106,6 +108,17 @@ int main(int argc, char* argv[]) {
         world.BeginDay();
         world.RunCreatures();
         world.UpdateMemory();
+
+        // Serialize WorldSnapshot
+        WorldSnapshot snapshot = world.CreateSnapshot();
+        json snapshot_json = snapshot;
+
+        std::string snapshot_path =
+            "data/snapshots/day_" + std::to_string(world.GetDay()) + ".json";
+
+        std::ofstream snapshot_file(snapshot_path);
+        snapshot_file << snapshot_json.dump(4);
+        snapshot_file.close();
     }
 
     return 0;

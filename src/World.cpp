@@ -46,6 +46,8 @@ World::World(const WorldConfig& config)
     this->InitializeNutrientClusters();
 }
 
+int World::GetDay() const { return day; }
+
 Entity* World::CreateEntity(EntityType type, Tile* tile) {
     switch (type) {
         case CREATURE: {
@@ -819,7 +821,11 @@ CreatureSnapshot World::CreateCreatureSnapshot(Creature& creature) const {
     snapshot.id = creature.GetId();
     snapshot.ideal_moisture = creature.GetIdealMoisture();
     snapshot.ideal_sunlight = creature.GetIdealSunlight();
-    snapshot.objective_position = creature.GetObjective()->GetPosition();
+
+    if (creature.GetObjective() != nullptr) {
+        snapshot.objective_position = creature.GetObjective()->GetPosition();
+    }
+
     snapshot.position = creature.GetPosition();
     snapshot.type = creature.GetType();
 
@@ -859,6 +865,8 @@ TileSnapshot World::CreateTileSnapshot(Tile& tile) const {
 
 WorldSnapshot World::CreateSnapshot() {
     WorldSnapshot snapshot;
+
+    snapshot.day = day;
 
     // Create Creature snapshots
     for (auto& creature : creatures) {

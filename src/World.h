@@ -11,7 +11,7 @@
 #include "Stone.h"
 #include "Tile.h"
 #include "WorldConfig.h"
-#include "WorldSnapshot.h"
+#include "observation/WorldSnapshot.h"
 
 class World {
    public:
@@ -39,12 +39,8 @@ class World {
     void SetViewMode(ViewMode mode);
     void UpdateMemory();
     void UpdateStoneMemory();
-    CreatureSnapshot CreateCreatureSnapshot(Creature& creature) const;
-    NutrientClusterSnapshot CreateNutrientClusterSnapshot(
-        NutrientCluster& cluster) const;
-    StoneSnapshot CreateStoneSnapshot(Stone& stone) const;
-    TileSnapshot CreateTileSnapshot(Tile& tile) const;
     WorldSnapshot CreateSnapshot();
+    int GetDay() const;
 
    private:
     std::vector<std::unique_ptr<Creature>> creatures;
@@ -92,6 +88,13 @@ class World {
 
     // * Narration Helpers
     std::string DescribeStone(Stone& stone);
+
+    // * Agent Helpers
+    CreatureSnapshot CreateCreatureSnapshot(Creature& creature) const;
+    NutrientClusterSnapshot CreateNutrientClusterSnapshot(
+        NutrientCluster& cluster) const;
+    StoneSnapshot CreateStoneSnapshot(Stone& stone) const;
+    TileSnapshot CreateTileSnapshot(Tile& tile) const;
 };
 
 #endif

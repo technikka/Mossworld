@@ -37,6 +37,7 @@ struct TileSnapshot {
 };
 
 struct WorldSnapshot {
+    int day;
     std::vector<CreatureSnapshot> creatures;
     std::vector<NutrientClusterSnapshot> nutrient_clusters;
     std::vector<StoneSnapshot> stones;
